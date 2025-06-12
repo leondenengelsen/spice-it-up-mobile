@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - Spice It Up</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <header class="settings-header">
+                <a href="index.html" class="back-link">← Back</a>
+                <h1>🌶️ Account Settings</h1>
+            </header>
+
+            <div class="settings-content">
+                <!-- Profile Section -->
+                <section class="settings-section">
+                    <h2>Profile</h2>
+                    <div id="profile-info">
+                        <p>Email: <span id="user-email">Loading...</span></p>
+                        <p>Account created: <span id="account-created">Loading...</span></p>
+                    </div>
+                    
+                    <!-- Change Password Form -->
+                    <form id="password-form" class="settings-form">
+                        <h3>Change Password</h3>
+                        <div class="form-group">
+                            <input type="password" id="current-password" placeholder="Current Password" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="new-password" placeholder="New Password" required>
+                        </div>
+                        <button type="submit" class="auth-button">Update Password</button>
+                    </form>
+                </section>
+
+                <!-- Delete Account Section -->
+                <section class="settings-section danger-zone">
+                    <h2>Danger Zone</h2>
+                    <p class="warning-text">Once you delete your account, there is no going back. Please be certain.</p>
+                    <button id="delete-account" class="auth-button delete-button">Delete Account</button>
+                </section>
+
+                <!-- Message Area -->
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './js/firebase/init.js';
+        import { 
+            updatePassword,
+            deleteUser,
+            reauthenticateWithCredential,
+            EmailAuthProvider,
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+        // Initialize auth state listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Display user info
+                document.getElementById('user-email').textContent = user.email;
+                const createdDate = new Date(user.metadata.creationTime);
+                document.getElementById('account-created').textContent = createdDate.toLocaleDateString();
+
+                // Handle password change
+                document.getElementById('password-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const messageEl = document.getElementById('message');
+                    try {
+                        const currentPassword = document.getElementById('current-password').value;
+                        const newPassword = document.getElementById('new-password').value;
+
+                        // Re-authenticate user before changing password
+                        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                        await reauthenticateWithCredential(user, credential);
+                        
+                        // Update password
+                        await updatePassword(user, newPassword);
+                        
+                        messageEl.textContent = 'Password updated successfully!';
+                        messageEl.className = 'message success';
+                        document.getElementById('password-form').reset();
+                    } catch (error) {
+                        messageEl.textContent = error.message;
+                        messageEl.className = 'message error';
+                    }
+                };
+
+                // Handle account deletion
+                document.getElementById('delete-account').onclick = async () => {
+                    const messageEl = document.getElementById('message');
+                    
+                    // Ask for confirmation
+                    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                        return;
+                    }
+
+                    // Ask for password to confirm deletion
+                    const password = prompt('Please enter your password to confirm account deletion:');
+                    if (!password) return;
+
+                    try {
+                        // Re-authenticate before deletion
+                        const credential = EmailAuthProvider.credential(user.email, password);
+                        await reauthenticateWithCredential(user, credential);
+                        
+                        // Get fresh token for database deletion
+                        const idToken = await user.getIdToken(true);
+                        
+                        // Delete from database first
+                        const response = await fetch('/api/auth/delete-user', {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`
+                            }
+                        });
+                        
+                        // Get the detailed error message if the request failed
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Failed to delete user from database');
+                        }
+                        
+                        // Then delete from Firebase
+                        await deleteUser(user);
+                        
+                        // Clear any stored data
+                        localStorage.removeItem('firebaseToken');
+                        localStorage.removeItem('hasVisited');
+                        
+                        // Redirect to signup page
+                        window.location.href = '/signup.html';
+                    } catch (error) {
+                        console.error('Delete account error:', error);
+                        messageEl.textContent = `Error: ${error.message}`;
+                        messageEl.className = 'message error';
+                    }
+                };
+            } else {
+                // Not logged in, redirect to login
+                window.location.href = '/login.html';
+            }
+        });
+    </script>
+</body>
+</html> 

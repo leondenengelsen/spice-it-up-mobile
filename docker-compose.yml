@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: spice-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: spice_db
+      MYSQL_USER: spice_user
+      MYSQL_PASSWORD: spicepass
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: spice-phpmyadmin
+    platform: linux/amd64  # 🛠 Needed on Mac M1/M2
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8082:80"  # ✅ Changed to avoid conflict
+    depends_on:
+      - mysql
+
+  backend:
+    build: ./backend
+    container_name: spice-backend
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: spice_user
+      DB_PASSWORD: spicepass
+      DB_NAME: spice_db
+      PORT: 3000
+      FIREBASE_PROJECT_ID: spice-it-up
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - ./frontend:/app/frontend
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    command: npm run dev
+
+volumes:
+  db_data:

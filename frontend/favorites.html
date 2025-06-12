@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Favorites - Spice It Up</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/header-shared.css" />
+  <link rel="stylesheet" href="css/favorites.css" />
+  <link rel="stylesheet" href="css/inputValidator.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="app-header">
+    <button class="menu-icon" id="hamburger" aria-label="Menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="app-title">
+      <h1 class="app-title-text">Favorites</h1>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" aria-label="Back to home" class="header-link">
+        <button class="header-btn" aria-label="Back to home" tabindex="-1">
+          <img src="Images/pepper-gpt-Photoroom.png" alt="Back to home" class="header-img" />
+        </button>
+      </a>
+    </div>
+  </header>
+
+  <main id="favorites-page">
+    <header class="app-subtitle">
+      <h5 class="subtitle-text">Your saved recipe ideas</h5>
+    </header>
+
+    <!-- Empty state for when no favorites exist -->
+    <section class="empty-state" id="empty-state" style="display: none;">
+      <div class="empty-state-content">
+        <div class="empty-icon">💝</div>
+        <h3>No favorites yet</h3>
+        <p>Save recipe ideas from the main pages to see them here!</p>
+        <a href="index.html" class="cta-button">Find Recipes</a>
+      </div>
+    </section>
+
+    <!-- Loading state -->
+    <section class="loading-state" id="loading-state">
+      <div class="loading-content">
+        <div class="loading-spinner">🌶️</div>
+        <p>Loading your favorites...</p>
+      </div>
+    </section>
+
+    <!-- Favorites grid -->
+    <section class="favorites-grid" id="favorites-grid" style="display: none;">
+      <!-- Recipe cards will be populated here by JavaScript -->
+    </section>
+
+    <!-- Full recipe modal (similar to main pages) -->
+    <section class="full-recipe-section" id="full-recipe-section" style="display: none;">
+      <!-- Full recipe content will be populated here -->
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/emojiUtils.js"></script>
+  <script type="module" src="js/favorites.js"></script>
+</body>
+</html>

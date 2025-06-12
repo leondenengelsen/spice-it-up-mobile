@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7e6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Options – Spice It Up</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/header-shared.css" />
+  <link rel="stylesheet" href="css/options.css" />
+  <link rel="stylesheet" href="css/allergy-modal.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body>
+  <header class="app-header">
+    <a href="index.html" aria-label="Go back to main" class="header-link">
+      <button class="header-btn" aria-label="Home" tabindex="-1">
+        <img src="Images/pepper-gpt-Photoroom.png" alt="Home" class="header-img" />
+      </button>
+    </a>
+    <div class="app-title">
+      <h1 class="app-title-text">Spice It Up!</h1>
+    </div>
+    <div class="header-actions">
+      <a href="favorites.html" aria-label="Go to favorites" class="header-link">
+        <button class="header-btn" aria-label="Favorites" tabindex="-1">
+          <span class="header-emoji">❤️</span>
+        </button>
+      </a>
+    </div>
+  </header>
+
+  <main id="options-page">
+    <section class="options-container">
+      <h5 class="subtitle-text">Settings</h5>
+      <form class="options-form" id="options-form">
+        <div class="form-group slider-group">
+          <div class="slider-label">
+            <span>Portions</span>
+            <span class="value-display" id="portion-value">4</span>
+          </div>
+          <input id="portion-slider" type="range" min="1" max="8" value="4" />
+        </div>
+
+        <div class="form-group slider-group">
+          <div class="slider-label">
+            <span>How adventurous are you?</span>
+            <span class="value-display" id="adventure-value">Just a little</span>
+          </div>
+          <input id="adventure-slider" type="range" min="1" max="6" value="1" step="1" oninput="updateAdventureText(this.value)" />
+          <div class="slider-label">
+            <span id="adventure-left-label">Just a little</span>
+            <span id="adventure-right-label">Go balzy!</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="allergy-section">
+          <div class="allergy-header">
+            <label class="input-label">Allergies & Dietary Restrictions</label>
+            <button type="button" class="edit-btn" id="edit-allergies">Edit</button>
+          </div>
+          <div class="allergy-summary" id="allergy-summary">
+            <p class="no-allergies">No allergies or dietary restrictions selected</p>
+          </div>
+        </div>
+
+        <button type="submit" class="options-btn">Save Changes</button>
+      </form>
+
+      <!-- Logout Section -->
+      <div class="logout-section">
+        <a href="account-settings.html" class="auth-button">Account Settings</a>
+        <button id="logout-btn" class="auth-button secondary">Logout</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script type="module" src="js/firebase/authStateManager.js"></script>
+  <script type="module" src="js/options.js"></script>
+</body>
+</html>

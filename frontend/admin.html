@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Spice It Up</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/header-shared.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <header class="app-header">
+        <div style="width: 40px;"></div> <!-- Placeholder for balance -->
+        <div class="app-title">
+            <a href="index.html" class="home-link">
+                <h1 class="app-title-text">
+                    <span class="title-emoji">🌶️</span>Spice It Up
+                </h1>
+            </a>
+        </div>
+        <div class="header-actions">
+            <a href="#" id="auth-link" class="auth-link">Logout</a>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <h2>Admin Dashboard</h2>
+        
+        <!-- User Management Section -->
+        <section class="admin-section">
+            <h3>User Management</h3>
+            <div class="user-list" id="user-list">
+                <!-- Users will be loaded here -->
+                <div class="loading">Loading users...</div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section class="admin-section">
+            <h3>Settings</h3>
+            <div class="settings-form">
+                <div class="form-group">
+                    <label for="max-recipes">Maximum Recipes Per User</label>
+                    <input type="number" id="max-recipes" min="1" max="100" value="10">
+                </div>
+                <div class="form-group">
+                    <label for="enable-verification">Require Email Verification</label>
+                    <input type="checkbox" id="enable-verification" checked>
+                </div>
+                <button id="save-settings">Save Settings</button>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import authManager from './js/firebase/authStateManager.js';
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const token = localStorage.getItem('firebaseToken');
+                const response = await fetch('/api/auth/users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load users');
+                
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('user-list').innerHTML = 
+                    '<div class="error">Failed to load users</div>';
+            }
+        }
+
+        // Display users in the list
+        function displayUsers(users) {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = users.map(user => `
+                <div class="user-item">
+                    <div class="user-info">
+                        <strong>${user.username}</strong>
+                        <span>${user.email}</span>
+                    </div>
+                    <div class="user-actions">
+                        <button onclick="toggleAdmin('${user.id}')" 
+                                class="admin-toggle ${user.is_admin ? 'active' : ''}">
+                            ${user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle admin status
+        window.toggleAdmin = async (userId) => {
+            try {
+                const token = localStorage.getItem('firebaseToken');
+                const response = await fetch(`/api/auth/toggle-admin/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to toggle admin status');
+                
+                // Reload users to show updated status
+                loadUsers();
+            } catch (error) {
+                console.error('Error toggling admin status:', error);
+                alert('Failed to update admin status');
+            }
+        };
+
+        // Save settings
+        document.getElementById('save-settings').onclick = async () => {
+            try {
+                const token = localStorage.getItem('firebaseToken');
+                const settings = {
+                    maxRecipes: document.getElementById('max-recipes').value,
+                    requireVerification: document.getElementById('enable-verification').checked
+                };
+                
+                const response = await fetch('/api/auth/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (!response.ok) throw new Error('Failed to save settings');
+                
+                alert('Settings saved successfully');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Failed to save settings');
+            }
+        };
+
+        // Load initial data
+        loadUsers();
+    </script>
+</body>
+</html> 

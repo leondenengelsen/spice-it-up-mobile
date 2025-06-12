@@ -1,0 +1,40 @@
+# Node dependencies
+node_modules/
+
+# System files
+.DS_Store
+
+# Environment variables and secrets
+.env
+OPENAI_API_KEY
+GEMINI_API_KEY
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# 🔐 Service account key (Google Cloud)
+secrets/service-account.json
+gen-lang-client-*.json
+
+# Optional cache/temp files
+*.cache
+*.tmp
+
+# Database dumps and notebooks
+*.sql
+*.mysql-notebook
+
+# Editor and workspace settings
+*.code-workspace
+
+# Development and test scripts
+start-dev.sh
+test-*.html
+debug-*.html
+
+# Project planning notes (optional)
+dev-context.md
+IMPLEMENTATION_COMPLETE.md

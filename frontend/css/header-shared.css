@@ -1,0 +1,239 @@
+/* header-shared.css */
+/* Unified header styling that works across all pages */
+
+/* ========================
+   Shared Header Normalization
+======================== */
+
+/* Base header structure - consistent across all pages */
+.app-header {
+  width: 100%;
+  max-width: 100vw; /* Prevent overflow */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0; /* Only top and bottom padding, no left/right */
+  margin: 0; /* Remove margin that was causing overflow */
+  background: transparent;
+  min-height: 48px; /* Ensures consistent header height */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Normalize all header titles to same size and spacing */
+.app-title {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0; /* Allow title to shrink if needed */
+  overflow: hidden; /* Prevent title overflow */
+}
+
+.app-title-text {
+  font-size: 2em;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.2;
+  /* Normalize emoji rendering in titles */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================
+   Unified Button/Icon System
+======================== */
+
+/* Base class for all header buttons - ensures consistent sizing */
+.header-btn {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  padding: 0;
+  flex-shrink: 0; /* Prevents button from shrinking */
+}
+
+.header-btn:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.header-btn:active {
+  transform: scale(0.95);
+}
+
+/* ========================
+   Emoji Standardization
+======================== */
+
+/* Normalize all emojis in header buttons to same size */
+.header-emoji {
+  font-size: 36px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+/* Fix emoji rendering inconsistencies across browsers */
+.header-emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', sans-serif;
+  font-variation-settings: 'emoji' 1;
+  text-rendering: optimizeQuality;
+}
+
+/* ========================
+   Image Standardization
+======================== */
+
+/* Normalize all images in header buttons to same size */
+.header-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ========================
+   Menu Icon (Hamburger) Normalization
+======================== */
+
+.menu-icon {
+  width: 60px;
+  height: 60px;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s, background-color 0.2s;
+  flex-shrink: 0; /* Prevent menu icon from shrinking */
+}
+
+.menu-icon:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-icon .bar {
+  width: 28px;
+  height: 3px;
+  background: var(--color-muted);
+  border-radius: 2px;
+  margin: 3px 0;
+  transition: all 0.3s;
+}
+
+/* ========================
+   Header Actions Container
+======================== */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Consistent spacing between header buttons */
+  flex-shrink: 0; /* Prevent header actions from shrinking */
+}
+
+/* ========================
+   Link Normalization for Header Buttons
+======================== */
+
+.header-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.header-link:hover {
+  transform: scale(1.05);
+}
+
+/* ========================
+   Responsive Header Adjustments
+======================== */
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.8rem 0; /* Only top and bottom padding, no left/right */
+  }
+  
+  .app-title-text {
+    font-size: 1.8em;
+  }
+  
+  .header-btn {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .header-emoji,
+  .header-img {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .menu-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .menu-icon .bar {
+    width: 24px;
+    height: 2px;
+  }
+}
+
+/* ========================
+   Specific Button Types
+======================== */
+
+/* Sprout button (emoji) */
+.sprout-btn {
+  composes: header-btn;
+}
+
+/* Back button (image) */
+.back-btn {
+  composes: header-btn;
+}
+
+/* Admin home link styling */
+.home-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.home-link:hover {
+  text-decoration: none;
+}
+
+/* ========================
+   Title Emoji Normalization
+======================== */
+
+/* When emojis are used in titles, normalize their size */
+.app-title-text .title-emoji {
+  font-size: 0.9em; /* Slightly smaller than title text for better proportion */
+  margin-right: 0.2em;
+  vertical-align: middle;
+} 

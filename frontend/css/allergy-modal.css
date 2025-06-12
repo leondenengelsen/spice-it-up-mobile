@@ -1,0 +1,140 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.allergy-modal {
+  background: var(--color-bg, white);
+  border-radius: var(--radius-lg, 12px);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  padding: 1.2rem;
+  border-bottom: 1px solid var(--color-border, #eee);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  line-height: 1;
+}
+
+.close-modal:hover {
+  color: var(--color-text);
+}
+
+.modal-content {
+  padding: 1.2rem;
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--color-border, #eee);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  position: sticky;
+  bottom: 0;
+  background: inherit;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn.primary {
+  background: var(--suggestion-bg);
+  color: var(--suggestion-text);
+  border: none;
+}
+
+.modal-btn.primary:hover {
+  filter: brightness(1.1);
+}
+
+.modal-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--color-muted);
+  color: var(--color-text);
+}
+
+.modal-btn.secondary:hover {
+  background: var(--color-hover);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+  .allergy-modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - 140px);
+  }
+
+  .modal-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+  }
+} 

@@ -1,0 +1,34 @@
+{
+  "name": "spice-it-up",
+  "version": "1.0.0",
+  "description": "A recipe spicing application",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "./start-dev.sh",
+    "dev-simple": "docker-compose up -d && sleep 5 && open http://localhost:3000",
+    "dev-no-browser": "docker-compose up -d",
+    "start": "docker-compose up -d",
+    "backend": "docker-compose up -d mysql backend",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "db": "open http://localhost:8082",
+    "favorites": "open http://localhost:3000/favorites.html",
+    "test-favorites": "open http://localhost:3000/test-favorites.html",
+    "server": "node backend/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.9.0",
+    "express": "^5.1.0",
+    "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
+    "mysql2": "^3.14.1",
+    "nodemon": "^3.1.10",
+    "openai": "^4.98.0"
+  }
+}

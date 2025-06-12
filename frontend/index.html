@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spice It Up</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/header-shared.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/inputValidator.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="app-header">
+    <button class="menu-icon" id="hamburger" aria-label="Menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="app-title">
+      <h1 class="app-title-text">Spice It Up!</h1>
+    </div>
+    <div class="header-actions">
+      <a href="veganize.html" aria-label="Veganize recipes" class="header-link">
+        <button class="header-btn" aria-label="Veganize recipes" tabindex="-1">
+          <span class="header-emoji">🌱</span>
+        </button>
+      </a>
+    </div>
+  </header>
+
+  <main id="main-page">
+    <header class="app-subtitle">
+      <h5 class="subtitle-text">AI-powered recipe booster</h5>
+    </header>
+
+    <section class="headline" id="headline-section">
+      <h3 class="headline-text">What are you <br> cooking today?</h3>
+    </section>
+
+    <section id="recipes-section"></section>
+  </main>
+
+  <div class="chili-wrap">
+    <div class="input-container" id="input-container">
+      <label class="input-label" for="user-input">type ingredients instead</label>
+      <input id="user-input" class="ingredient-input" type="text" placeholder="e.g. potatoes, broccoli, meatballs" autocomplete="off" />
+    </div>
+    <div class="chili-buttons-row">
+      <button class="restart-btn" id="restart-btn" aria-label="Back to start" style="display: none;">
+        <span class="restart-icon">↩</span>
+      </button>
+      <button class="chili-btn" id="talk-btn" aria-label="Speak">
+        <img src="Images/pepper-gpt-Photoroom.png" alt="Chili Pepper" class="chili-img" />
+      </button>
+    </div>
+    <p class="speak-hint">tap to get recipe ideas</p>
+  </div>
+
+  <script type="module" src="js/firebase/authStateManager.js"></script>
+  <script src="js/pageContext.js"></script>
+  <script src="js/inputValidator.js"></script>
+  <script src="js/emojiUtils.js"></script>
+  <script src="js/favorites.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

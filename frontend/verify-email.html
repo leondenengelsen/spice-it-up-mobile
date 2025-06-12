@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Spice It Up</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>🌶️ Spice It Up</h1>
+            <div class="verification-content">
+                <h2>Please Verify Your Email</h2>
+                <p>We've sent a verification email to <strong id="user-email">your email address</strong>. Please click the link in the email to verify your account.</p>
+                <p>Haven't received the email? Check your spam folder or click below to send it again.</p>
+                
+                <!-- Message Area -->
+                <div id="message" class="message"></div>
+                
+                <button id="resend-verification" class="auth-button">Resend Verification Email</button>
+                <button id="logout-btn" class="auth-button secondary">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './js/firebase/init.js';
+        import { sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { handleLogout } from './js/firebase/auth.js';
+
+        // Show user email if available
+        auth.onAuthStateChanged(user => {
+            if (user && user.email) {
+                const emailElement = document.getElementById('user-email');
+                if (emailElement) {
+                    emailElement.textContent = user.email;
+                }
+            }
+        });
+
+        // Handle resend verification
+        document.getElementById('resend-verification').onclick = async () => {
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await sendEmailVerification(user);
+                    document.getElementById('message').textContent = 'Verification email sent! Please check your inbox.';
+                    document.getElementById('message').className = 'message success';
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = error.message;
+                document.getElementById('message').className = 'message error';
+            }
+        };
+
+        // Handle logout
+        document.getElementById('logout-btn').onclick = handleLogout;
+
+        // Check verification status periodically
+        let checkVerification = setInterval(async () => {
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await user.reload(); // Refresh the user object
+                    if (user.emailVerified) {
+                        clearInterval(checkVerification);
+                        window.location.href = '/'; // Redirect to main page when verified
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking verification status:', error);
+            }
+        }, 3000); // Check every 3 seconds
+    </script>
+</body>
+</html> 

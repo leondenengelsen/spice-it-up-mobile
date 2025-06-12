@@ -1,0 +1,400 @@
+/* favorites.css */
+
+/* Recipe display components */
+.recipe-idea-box {
+  background: var(--suggestion-bg);
+  color: var(--suggestion-text);
+  padding: 0.9em 1em;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  margin: 0.8em 0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  transition: transform 0.15s cubic-bezier(.4, 2, .6, 1), box-shadow 0.15s;
+}
+
+.recipe-idea-box:hover {
+  transform: scale(1.035);
+  box-shadow: var(--shadow-hover);
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.2em;
+  width: 100%;
+  position: relative;
+}
+
+.recipe-emoji {
+  font-size: 1.5em;
+  margin-right: 0.4em;
+  vertical-align: middle;
+}
+
+.recipe-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-right: 2.5em; /* Make room for the heart */
+  flex: 1;
+}
+
+.recipe-desc {
+  font-size: 0.95em;
+  line-height: 1.3;
+  margin-bottom: 0.8em;
+}
+
+.full-recipe-modal {
+  background: transparent;
+  border-radius: var(--radius-lg);
+  margin-top: 1.5em;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  max-width: var(--max-width-modal);
+  width: 100%;
+  position: relative;
+  animation: fadeIn 0.3s;
+  z-index: 10;
+  box-shadow: none;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-header {
+  margin-bottom: 1em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.recipe-header .recipe-title {
+  font-size: 1.5em;
+  font-weight: 500;
+  margin: 0 0 0.5em 0;
+  color: var(--color-text);
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.favorite-btn:hover {
+  transform: translateY(-50%) scale(1.2);
+}
+
+.favorite-btn .heart-icon {
+  color: #e74c3c;
+}
+
+.favorite-btn.favorited .heart-icon {
+  animation: heart-beat 0.4s;
+}
+
+.favorite-feedback {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  transition: opacity 0.5s;
+}
+
+.full-recipe-content {
+  background: var(--recipe-bg);
+  color: var(--recipe-text);
+  padding: 1.5em;
+  border-radius: var(--radius-lg);
+  font-size: 1.08em;
+  line-height: 1.6;
+  margin-bottom: 1em;
+}
+
+.full-recipe-content h3 {
+  color: var(--color-text);
+  margin: 1.2em 0 0.8em;
+  font-size: 1.2em;
+  font-weight: 500;
+}
+
+.full-recipe-content h3:first-child {
+  margin-top: 0;
+}
+
+.full-recipe-content h4 {
+  color: #666;
+  font-size: 1.1em;
+  margin: 1.5em 0 0.5em;
+  font-weight: 500;
+  font-style: italic;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.3em;
+}
+
+.full-recipe-content h4:first-of-type {
+  margin-top: 1em;
+}
+
+.full-recipe-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.8em 0;
+}
+
+.full-recipe-content ul li {
+  padding: 0.5em 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  line-height: 1.4;
+}
+
+.full-recipe-content ul li:last-child {
+  border-bottom: none;
+}
+
+/* Style fractions to be slightly larger and more readable */
+.full-recipe-content ul li {
+  font-variant-numeric: oldstyle-nums;
+}
+
+/* Add some spacing between sections */
+.full-recipe-content h3 + ul {
+  margin-top: 1em;
+}
+
+/* Make the list more compact after a subheading */
+.full-recipe-content h4 + ul {
+  margin-top: 0.5em;
+}
+
+.full-recipe-content h4 + ul li:first-child {
+  padding-top: 0.3em;
+}
+
+.full-recipe-content ol {
+  padding-left: 1.2em;
+  margin: 0.8em 0;
+}
+
+.full-recipe-content ol li {
+  padding: 0.5em 0;
+  margin-bottom: 0.5em;
+}
+
+.back-button {
+  background: #FFBC42;
+  color: #333;
+  border: none;
+  border-radius: 1.5em;
+  padding: 0.7em 1.5em;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 1em auto;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.12s, background-color 0.2s;
+}
+
+.back-button:hover {
+  background: #FFD077;
+}
+
+.back-button:active {
+  transform: scale(0.97);
+}
+
+/* Favorites page specific styles */
+
+/* Loading and empty states */
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 3em 1em;
+  color: var(--text-color);
+}
+
+.loading-spinner {
+  font-size: 2em;
+  animation: spin 2s linear infinite;
+  margin-bottom: 1em;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.empty-state-content {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.empty-icon {
+  font-size: 3em;
+  margin-bottom: 0.5em;
+}
+
+.empty-state h3 {
+  margin: 0.5em 0;
+  color: var(--text-color);
+}
+
+.empty-state p {
+  margin-bottom: 1.5em;
+  color: var(--text-secondary);
+}
+
+.cta-button {
+  background: #FFBC42;
+  color: #333;
+  padding: 0.8em 2em;
+  border-radius: 2em;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s, background-color 0.2s;
+  display: inline-block;
+}
+
+.cta-button:hover {
+  background: #FFD077;
+  transform: translateY(-2px);
+}
+
+/* Favorites grid layout */
+.favorites-grid {
+  padding: 1em 0.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Recipe meta information */
+.recipe-meta {
+  margin-top: 0.5em;
+  width: 100%;
+  opacity: 0.8;
+  font-size: 0.8em;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  transition: opacity 0.2s;
+}
+
+.recipe-idea-box:hover .recipe-meta {
+  opacity: 1;
+}
+
+/* View Recipe Button */
+.view-recipe-btn {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 0.95em;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  font-weight: 500;
+}
+
+.view-recipe-btn:hover {
+  transform: translateX(3px);
+}
+
+/* Favorite Button in Grid View */
+.recipe-idea-box .favorite-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4em;
+  padding: 0;
+  margin: 0;
+}
+
+.recipe-idea-box .favorite-btn:hover {
+  transform: translateY(-50%) scale(1.2);
+}
+
+/* Full recipe section */
+.full-recipe-section {
+  padding: 1em;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* Heart beat animation for favorites */
+@keyframes heart-beat {
+  0% { transform: translateY(-50%) scale(1); }
+  25% { transform: translateY(-50%) scale(1.3); }
+  50% { transform: translateY(-50%) scale(1); }
+  75% { transform: translateY(-50%) scale(1.1); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+/* Responsive design for favorites grid */
+@media (min-width: 768px) {
+  .favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1em;
+    padding: 1.5em;
+  }
+  
+  .recipe-idea-box {
+    margin: 0; /* Remove margin when in grid */
+  }
+}
+
+@media (min-width: 1024px) {
+  .favorites-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5em;
+    padding: 2em;
+  }
+}
+
+/* Old header styles removed - using shared header styles */
+
+/* Ensure hamburger menu is consistent with other pages */
+.menu-icon {
+  width: 60px;
+  height: 60px;
+}
+
+.menu-icon .bar {
+  width: 28px;
+  height: 3px;
+}
+
+@media (max-width: 480px) {
+  .menu-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .menu-icon .bar {
+    width: 24px;
+    height: 2px;
+  }
+}

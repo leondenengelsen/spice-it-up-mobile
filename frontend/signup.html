@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Spice It Up</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>🌶️ Spice It Up</h1>
+            <p class="welcome-text">Welcome! Create your account to start spicing up your recipes.</p>
+            
+            <!-- Message Area -->
+            <div id="message" class="message"></div>
+            
+            <!-- Signup Form -->
+            <form id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <input type="text" id="signup-username" placeholder="Username" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signup-email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-password" placeholder="Password" required>
+                </div>
+                <button type="submit">Create Account</button>
+                <p class="toggle-form">Already have an account? <a href="login.html">Log In</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { handleSignup } from './js/firebase/auth.js';
+        import authManager from './js/firebase/authStateManager.js';
+
+        // Handle signup form submission
+        document.getElementById('signup-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const username = document.getElementById('signup-username').value;
+            await handleSignup(email, password, username);
+        };
+    </script>
+</body>
+</html> 

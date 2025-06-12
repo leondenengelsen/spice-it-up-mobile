@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Favorites</title>
+    <script type="module">
+        import { auth } from './js/firebase/init.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    try {
+                        // Get Firebase token for authentication
+                        const token = await user.getIdToken();
+                        
+                        // Clear favorites from database
+                        const response = await fetch('/api/favorites/clear', {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            document.getElementById('status').textContent = 'Favorites cleared successfully!';
+                        } else {
+                            throw new Error('Failed to clear favorites');
+                        }
+                    } catch (error) {
+                        console.error('Error clearing favorites:', error);
+                        document.getElementById('status').textContent = 'Error clearing favorites. Please try again.';
+                    }
+                } else {
+                    document.getElementById('status').textContent = 'Please log in to manage favorites.';
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return;
+                }
+
+                // Redirect back to favorites page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'favorites.html';
+                }, 2000);
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+        }
+        .message {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        <div id="status">Clearing favorites...</div>
+    </div>
+</body>
+</html>
