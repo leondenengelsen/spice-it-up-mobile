@@ -8,6 +8,7 @@ async function loadOptionsFromDatabase() {
   console.log('🔄 [OPTIONS] Starting to load options from database');
   console.log('📱 [OPTIONS] Is native app:', isNativeApp);
   console.log('🔗 [OPTIONS] API URL:', getApiUrl());
+  console.log('🌐 [OPTIONS] Full API endpoint:', `${getApiUrl()}/api/options/`);
   
   try {
     const token = localStorage.getItem('firebaseToken');
@@ -15,14 +16,17 @@ async function loadOptionsFromDatabase() {
       console.log('❌ [OPTIONS] No authentication token found');
       return false;
     }
-    console.log('✅ [OPTIONS] Found auth token');
+    console.log('✅ [OPTIONS] Found auth token:', token.substring(0, 10) + '...');
 
-    console.log('🔄 [OPTIONS] Fetching options from:', `${getApiUrl()}/api/options/`);
+    console.log('🔄 [OPTIONS] Making fetch request to:', `${getApiUrl()}/api/options/`);
     const response = await fetch(`${getApiUrl()}/api/options/`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+
+    console.log('📡 [OPTIONS] Response status:', response.status);
+    console.log('📡 [OPTIONS] Response status text:', response.statusText);
 
     if (!response.ok) {
       console.error('❌ [OPTIONS] Failed to fetch options:', response.status, response.statusText);
@@ -33,6 +37,8 @@ async function loadOptionsFromDatabase() {
 
     const options = await response.json();
     console.log('✅ [OPTIONS] Successfully loaded options:', JSON.stringify(options, null, 2));
+    console.log('🔍 [OPTIONS] Has other_settings:', !!options.other_settings);
+    console.log('🔍 [OPTIONS] Has allergies:', !!(options.other_settings && options.other_settings.allergies));
 
     // Update UI with database values
     const portionSlider = document.getElementById('portion-slider');
@@ -58,12 +64,11 @@ async function loadOptionsFromDatabase() {
       localStorage.setItem('adventurousness', options.adventurousness);
     }
 
-    if (options.other_settings && options.other_settings.allergies) {
-      console.log('⚠️ [OPTIONS] Setting allergies to:', options.other_settings.allergies);
-      const allergies = options.other_settings.allergies;
-      localStorage.setItem('allergies', JSON.stringify(allergies));
-      updateAllergySummary(allergies);
-    }
+    // Handle allergies from either location
+    const allergies = options.allergies || (options.other_settings && options.other_settings.allergies) || [];
+    console.log('⚠️ [OPTIONS] Setting allergies to:', allergies);
+    localStorage.setItem('allergies', JSON.stringify(allergies));
+    updateAllergySummary(allergies);
 
     console.log('✅ [OPTIONS] Finished updating UI with database values');
     return true;
@@ -180,9 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const requestBody = {
         portions: parseInt(portionSlider.value),
         adventurousness: parseInt(adventureSlider.value),
-        other_settings: { 
-          allergies: allergies
-        }
+        allergies: allergies  // Send allergies at root level
       };
       console.log('📦 [OPTIONS] Request body:', JSON.stringify(requestBody, null, 2));
       

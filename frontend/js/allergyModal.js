@@ -1,4 +1,6 @@
 // Allergy modal functionality
+import { getApiUrl, isNativeApp } from './config.js';
+
 export class AllergyModal {
   constructor() {
     this.modal = null;
