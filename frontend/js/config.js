@@ -7,8 +7,8 @@ const config = {
   },
   // Production environment (your actual backend server)
   production: {
-    browser: 'https://your-backend-server.com',
-    mobile: 'https://your-backend-server.com'
+    browser: 'https://spice-it-up-api.onrender.com',
+    mobile: 'https://spice-it-up-api.onrender.com'
   }
 };
 
@@ -17,22 +17,16 @@ const isCapacitor = !!(window.Capacitor && (window.Capacitor.isNative || window.
 
 // Get the current environment
 const getCurrentEnvironment = () => {
-  // For mobile, always use development for now
-  if (isCapacitor) {
-    console.log('📱 Running in Capacitor (mobile)');
-    return 'development';
-  }
-  // For web, check if we're on localhost
-  const env = window.location.hostname === 'localhost' ? 'development' : 'production';
-  console.log('🌐 Running in browser, environment:', env);
-  return env;
+  // Always use production for now
+  console.log('🌐 Using production environment for all platforms');
+  return 'production';
 };
 
 // Export the configuration
 export const getApiUrl = () => {
   const env = getCurrentEnvironment();
   const platform = isCapacitor ? 'mobile' : 'browser';
-  const url = isCapacitor ? config[env].mobile : config[env].browser;
+  const url = config[env][platform];
   console.log(`🔗 Using API URL: ${url} (env: ${env}, platform: ${platform})`);
   return url;
 };

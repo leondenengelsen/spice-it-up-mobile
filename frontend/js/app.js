@@ -34,7 +34,9 @@ async function getUserAllergies() {
     }
     
     const options = await response.json();
-    return options.allergies || [];
+    console.log('✅ User options fetched:', options);
+    // Check both locations for allergies, like the options page does
+    return options.allergies || (options.other_settings && options.other_settings.allergies) || [];
   } catch (error) {
     console.error('❌ Error fetching user allergies:', error);
     return [];

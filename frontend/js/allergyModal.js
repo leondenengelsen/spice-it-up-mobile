@@ -133,9 +133,7 @@ export class AllergyModal {
         body: JSON.stringify({
           portions: currentSettings.portions,
           adventurousness: currentSettings.adventurousness,
-          other_settings: {
-            allergies: allergies
-          }
+          allergies: allergies  // Save at root level
         })
       });
 

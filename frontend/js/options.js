@@ -1,7 +1,31 @@
+console.log('🔄 [OPTIONS] Script starting to load - BEFORE IMPORTS');
+
 // Logic for the options page
 import { handleLogout } from './firebase/auth.js';
 import { AllergyModal } from './allergyModal.js';
 import { getApiUrl, isNativeApp } from './config.js';
+
+console.log('🔄 [OPTIONS] Script loaded - AFTER IMPORTS');
+
+// Helper function to show notifications
+function showNotification(message, isError = false) {
+  if (typeof Toastify === 'undefined') {
+    console.error('Toastify not loaded');
+    alert(message);
+    return;
+  }
+  
+  Toastify({
+    text: message,
+    duration: 3000,
+    gravity: "bottom",
+    position: "center",
+    style: {
+      background: isError ? "#e74c3c" : "var(--suggestion-bg)",
+      color: isError ? "white" : "var(--suggestion-text)"
+    }
+  }).showToast();
+}
 
 // Function to load options from database
 async function loadOptionsFromDatabase() {
@@ -39,6 +63,8 @@ async function loadOptionsFromDatabase() {
     console.log('✅ [OPTIONS] Successfully loaded options:', JSON.stringify(options, null, 2));
     console.log('🔍 [OPTIONS] Has other_settings:', !!options.other_settings);
     console.log('🔍 [OPTIONS] Has allergies:', !!(options.other_settings && options.other_settings.allergies));
+    console.log('🔍 [OPTIONS] Has root allergies:', !!options.allergies);
+    console.log('🔍 [OPTIONS] Current localStorage allergies:', localStorage.getItem('allergies'));
 
     // Update UI with database values
     const portionSlider = document.getElementById('portion-slider');
@@ -48,6 +74,7 @@ async function loadOptionsFromDatabase() {
     const allergySummary = document.getElementById('allergy-summary');
 
     console.log('🔄 [OPTIONS] Updating UI with database values');
+    console.log('🔄 [OPTIONS] Current UI values - Portions:', portionSlider?.value, 'Adventure:', adventureSlider?.value);
     
     if (options.portions) {
       console.log('📊 [OPTIONS] Setting portions to:', options.portions);
@@ -67,10 +94,13 @@ async function loadOptionsFromDatabase() {
     // Handle allergies from either location
     const allergies = options.allergies || (options.other_settings && options.other_settings.allergies) || [];
     console.log('⚠️ [OPTIONS] Setting allergies to:', allergies);
+    console.log('⚠️ [OPTIONS] Previous localStorage allergies:', localStorage.getItem('allergies'));
     localStorage.setItem('allergies', JSON.stringify(allergies));
+    console.log('⚠️ [OPTIONS] New localStorage allergies:', localStorage.getItem('allergies'));
     updateAllergySummary(allergies);
 
     console.log('✅ [OPTIONS] Finished updating UI with database values');
+    console.log('✅ [OPTIONS] Final UI values - Portions:', portionSlider?.value, 'Adventure:', adventureSlider?.value);
     return true;
   } catch (error) {
     console.error('❌ [OPTIONS] Error loading options:', error);
@@ -79,156 +109,211 @@ async function loadOptionsFromDatabase() {
   }
 }
 
+// Add a global error handler
+window.addEventListener('error', (event) => {
+  console.error('❌ [OPTIONS] Global error caught:', event.error);
+  console.error('❌ [OPTIONS] Error stack:', event.error?.stack);
+});
+
+// Add an unhandled rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ [OPTIONS] Unhandled promise rejection:', event.reason);
+  console.error('❌ [OPTIONS] Error stack:', event.reason?.stack);
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🔄 [OPTIONS] DOM Content Loaded');
-  console.log('📱 [OPTIONS] Is native app:', isNativeApp);
-  console.log('🔗 [OPTIONS] API URL:', getApiUrl());
-  
-  const portionSlider = document.getElementById('portion-slider');
-  const portionValue = document.getElementById('portion-value');
-  const adventureSlider = document.getElementById('adventure-slider');
-  const adventureValue = document.getElementById('adventure-value');
-  
-  // Initialize allergy modal
-  const allergyModal = new AllergyModal();
-  const editAllergiesBtn = document.getElementById('edit-allergies');
-  const allergySummary = document.getElementById('allergy-summary');
-
-  console.log('🔄 [OPTIONS] Starting to load options from database');
-  const databaseLoadSuccess = await loadOptionsFromDatabase();
-  
-  // Only load from localStorage if database load failed
-  if (!databaseLoadSuccess) {
-    console.log('⚠️ [OPTIONS] Database load failed, using localStorage values');
-    // Fallback to localStorage if database values aren't available
-    const savedPortions = localStorage.getItem('portions');
-    if (savedPortions && !portionSlider.value) {
-      console.log('📊 [OPTIONS] Using localStorage fallback for portions:', savedPortions);
-      portionSlider.value = savedPortions;
-      portionValue.textContent = savedPortions;
-    }
-
-    const savedAdventure = localStorage.getItem('adventurousness');
-    if (savedAdventure && !adventureSlider.value) {
-      console.log('🎯 [OPTIONS] Using localStorage fallback for adventurousness:', savedAdventure);
-      adventureSlider.value = savedAdventure;
-      adventureValue.textContent = savedAdventure;
-      updateAdventureText(savedAdventure);
-    }
-
-    // Only load allergies from localStorage if we didn't get them from the database
-    const savedAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-    if (savedAllergies.length > 0) {
-      console.log('⚠️ [OPTIONS] Using localStorage fallback for allergies:', savedAllergies);
-      updateAllergySummary(savedAllergies);
-    }
-  }
-
-  portionSlider.oninput = () => {
-    portionValue.textContent = portionSlider.value;
-    localStorage.setItem('portions', portionSlider.value);
-  };
-
-  adventureSlider.oninput = () => {
-    adventureValue.textContent = adventureSlider.value;
-    updateAdventureText(adventureSlider.value);
-    localStorage.setItem('adventurousness', adventureSlider.value);
-  };
-
-  // Handle edit button click
-  if (editAllergiesBtn) {
-    editAllergiesBtn.onclick = () => {
-      const currentAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-      allergyModal.init(currentAllergies, (updatedAllergies) => {
-        localStorage.setItem('allergies', JSON.stringify(updatedAllergies));
-        updateAllergySummary(updatedAllergies);
-      });
-      allergyModal.show();
-    };
-  }
-
-  document.getElementById('options-form').onsubmit = async (e) => {
-    e.preventDefault();
-    console.log('🔄 [OPTIONS] Form submitted');
+  console.log('🔄 [OPTIONS] DOM Content Loaded event fired');
+  try {
+    console.log('🔄 [OPTIONS] Starting initialization');
+    console.log('📱 [OPTIONS] Is native app:', isNativeApp);
+    console.log('🔗 [OPTIONS] API URL:', getApiUrl());
+    console.log('🔑 [OPTIONS] Firebase token exists:', !!localStorage.getItem('firebaseToken'));
     
-    // Get Firebase token
-    const token = localStorage.getItem('firebaseToken');
-    if (!token) {
-      console.log('❌ [OPTIONS] No auth token for form submission');
-      Toastify({
-        text: "Please log in to save preferences",
-        duration: 3000,
-        gravity: "bottom",
-        position: "center",
-        style: {
-          background: "#e74c3c",
-          color: "white"
-        }
-      }).showToast();
-      
-      setTimeout(() => {
-        window.location.href = '/login.html';
-      }, 2000);
-      return;
-    }
+    const portionSlider = document.getElementById('portion-slider');
+    const portionValue = document.getElementById('portion-value');
+    const adventureSlider = document.getElementById('adventure-slider');
+    const adventureValue = document.getElementById('adventure-value');
     
+    console.log('🔍 [OPTIONS] Found UI elements:', {
+      portionSlider: !!portionSlider,
+      portionValue: !!portionValue,
+      adventureSlider: !!adventureSlider,
+      adventureValue: !!adventureValue
+    });
+    
+    // Initialize allergy modal
+    const allergyModal = new AllergyModal();
+    const editAllergiesBtn = document.getElementById('edit-allergies');
+    const allergySummary = document.getElementById('allergy-summary');
+    
+    console.log('🔍 [OPTIONS] Found allergy elements:', {
+      editAllergiesBtn: !!editAllergiesBtn,
+      allergySummary: !!allergySummary
+    });
+
+    console.log('🔄 [OPTIONS] Starting to load options from database');
     try {
-      console.log('🔄 [OPTIONS] Saving options to database');
-      console.log('🔗 [OPTIONS] Using API URL:', getApiUrl());
+      const databaseLoadSuccess = await loadOptionsFromDatabase();
+      console.log('✅ [OPTIONS] Database load result:', databaseLoadSuccess);
       
-      // Save to localStorage
-      localStorage.setItem('portions', portionSlider.value);
-      
-      // Get selected allergies from localStorage
-      const allergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-      
-      const requestBody = {
-        portions: parseInt(portionSlider.value),
-        adventurousness: parseInt(adventureSlider.value),
-        allergies: allergies  // Send allergies at root level
-      };
-      console.log('📦 [OPTIONS] Request body:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch(`${getApiUrl()}/api/options`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [OPTIONS] Failed to save settings:', response.status, response.statusText);
-        console.error('❌ [OPTIONS] Error response:', errorText);
-        throw new Error('Failed to save settings');
-      }
-
-      console.log('✅ [OPTIONS] Successfully saved settings');
-      // Redirect immediately after successful save
-      window.location.href = '/index.html';
-      
-    } catch (error) {
-      console.error('❌ [OPTIONS] Error saving options:', error);
-      console.error('❌ [OPTIONS] Error stack:', error.stack);
-      Toastify({
-        text: "Failed to save settings. Please try again.",
-        duration: 3000,
-        gravity: "bottom",
-        position: "center",
-        style: {
-          background: "#e74c3c",
-          color: "white"
+      // Only load from localStorage if database load failed
+      if (!databaseLoadSuccess) {
+        console.log('⚠️ [OPTIONS] Database load failed, using localStorage values');
+        // Fallback to localStorage if database values aren't available
+        const savedPortions = localStorage.getItem('portions');
+        if (savedPortions && !portionSlider.value) {
+          console.log('📊 [OPTIONS] Using localStorage fallback for portions:', savedPortions);
+          portionSlider.value = savedPortions;
+          portionValue.textContent = savedPortions;
         }
-      }).showToast();
-    }
-  };
 
-  // Handle logout
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.onclick = handleLogout;
+        const savedAdventure = localStorage.getItem('adventurousness');
+        if (savedAdventure && !adventureSlider.value) {
+          console.log('🎯 [OPTIONS] Using localStorage fallback for adventurousness:', savedAdventure);
+          adventureSlider.value = savedAdventure;
+          adventureValue.textContent = savedAdventure;
+          updateAdventureText(savedAdventure);
+        }
+
+        // Only load allergies from localStorage if we didn't get them from the database
+        const savedAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+        if (savedAllergies.length > 0) {
+          console.log('⚠️ [OPTIONS] Using localStorage fallback for allergies:', savedAllergies);
+          updateAllergySummary(savedAllergies);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OPTIONS] Error during initialization:', error);
+      console.error('❌ [OPTIONS] Error stack:', error.stack);
+    }
+
+    portionSlider.oninput = () => {
+      portionValue.textContent = portionSlider.value;
+      localStorage.setItem('portions', portionSlider.value);
+    };
+
+    adventureSlider.oninput = () => {
+      adventureValue.textContent = adventureSlider.value;
+      updateAdventureText(adventureSlider.value);
+      localStorage.setItem('adventurousness', adventureSlider.value);
+    };
+
+    // Handle edit button click
+    if (editAllergiesBtn) {
+      editAllergiesBtn.onclick = () => {
+        const currentAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+        allergyModal.init(currentAllergies, (updatedAllergies) => {
+          localStorage.setItem('allergies', JSON.stringify(updatedAllergies));
+          updateAllergySummary(updatedAllergies);
+        });
+        allergyModal.show();
+      };
+    }
+
+    document.getElementById('options-form').onsubmit = async (e) => {
+      e.preventDefault();
+      console.log('🔄 [OPTIONS] Form submitted');
+      
+      // Get Firebase token
+      const token = localStorage.getItem('firebaseToken');
+      if (!token) {
+        console.log('❌ [OPTIONS] No auth token for form submission');
+        Toastify({
+          text: "Please log in to save preferences",
+          duration: 3000,
+          gravity: "bottom",
+          position: "center",
+          style: {
+            background: "#e74c3c",
+            color: "white"
+          }
+        }).showToast();
+        
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 2000);
+        return;
+      }
+      
+      try {
+        console.log('🔄 [OPTIONS] Saving portions and adventurousness to database');
+        console.log('🔗 [OPTIONS] Using API URL:', getApiUrl());
+        
+        // Save to localStorage
+        localStorage.setItem('portions', portionSlider.value);
+        localStorage.setItem('adventurousness', adventureSlider.value);
+        
+        // Get current allergies from localStorage to preserve them
+        const currentAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+        console.log('📊 [OPTIONS] Preserving current allergies:', currentAllergies);
+        
+        const requestBody = {
+          portions: parseInt(portionSlider.value),
+          adventurousness: parseInt(adventureSlider.value),
+          allergies: currentAllergies  // Save at root level
+        };
+        console.log('📦 [OPTIONS] Request body:', JSON.stringify(requestBody, null, 2));
+        
+        const response = await fetch(`${getApiUrl()}/api/options`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ [OPTIONS] Failed to save settings:', response.status, response.statusText);
+          console.error('❌ [OPTIONS] Error response:', errorText);
+          throw new Error('Failed to save settings');
+        }
+
+        const responseData = await response.json();
+        console.log('✅ [OPTIONS] Successfully saved settings:', responseData);
+        
+        // Show success notification
+        Toastify({
+          text: "Portions and adventurousness saved ✅",
+          duration: 3000,
+          gravity: "bottom",
+          position: "center",
+          style: {
+            background: "var(--suggestion-bg)",
+            color: "var(--suggestion-text)"
+          }
+        }).showToast();
+
+        // Redirect after a short delay to allow the user to see the success message
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1000);
+        
+      } catch (error) {
+        console.error('❌ [OPTIONS] Error saving options:', error);
+        console.error('❌ [OPTIONS] Error stack:', error.stack);
+        Toastify({
+          text: "Failed to save settings. Please try again.",
+          duration: 3000,
+          gravity: "bottom",
+          position: "center",
+          style: {
+            background: "#e74c3c",
+            color: "white"
+          }
+        }).showToast();
+      }
+    };
+
+    // Handle logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.onclick = handleLogout;
+    }
+  } catch (error) {
+    console.error('❌ [OPTIONS] Error during initialization:', error);
+    console.error('❌ [OPTIONS] Error stack:', error.stack);
   }
 });
 
