@@ -2,6 +2,7 @@
 
 // Import favorites functions
 import { addToFavorites, getCurrentUser } from './favorites.js';
+import { getApiUrl } from './config.js';
 
 // ========================
 // UTILITY FUNCTIONS
@@ -19,7 +20,7 @@ async function getUserAllergies() {
       return [];
     }
 
-    const response = await fetch('/api/options/', {
+    const response = await fetch(`${getApiUrl()}/api/options/`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -136,8 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Get current page mode (requires pageContext.js to be loaded)
       const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
       
-
-      
       // Get Firebase token for authentication
       const token = localStorage.getItem('firebaseToken');
       if (!token) {
@@ -147,18 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Debug: Check user's adventurousness setting
       try {
-        const optionsResponse = await fetch('/api/options/', {
+        const optionsResponse = await fetch(`${getApiUrl()}/api/options/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (optionsResponse.ok) {
           const userOptions = await optionsResponse.json();
-
         }
       } catch (error) {
         console.error("Failed to fetch user options for debugging:", error);
       }
       
-      const res = await fetch('/api/generate/', {
+      const res = await fetch(`${getApiUrl()}/api/generate/`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -177,9 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         showEmptyState('No recipes returned. Please try again.');
       }
-    } catch (err) {
-      showEmptyState('Failed to get recipes. Please try again.');
-      console.error('Gemini fetch error:', err);
+    } catch (error) {
+      console.error('Error generating recipes:', error);
+      showEmptyState('Error generating recipes. Please try again.');
     }
   }
 
@@ -470,14 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.innerHTML;
   }
 
-
-
-
-
-
-
-
-
   // Handle click on a recipe idea box
   async function handleRecipeClick(idx, idea) {
     const section = document.getElementById('recipes-section');
@@ -518,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      const res = await fetch('/api/generate/', {
+      const res = await fetch(`${getApiUrl()}/api/generate/`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -536,8 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
       });
-      
-
       
       if (!res.ok) throw new Error('Server error');
       const data = await res.json();

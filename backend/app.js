@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const cors = require('cors');
 const aiRoutes = require('./routes/aiRoutes');
 const optionsRoutes = require('./routes/optionsRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes');
@@ -16,6 +17,14 @@ console.log("✅ Loaded DB config:", {
   user: process.env.DB_USER,
   pass: !!process.env.DB_PASSWORD,
 });
+
+// Enable CORS with specific options
+app.use(cors({
+  origin: ['capacitor://localhost', 'http://localhost', 'http://localhost:3000', 'http://192.168.0.211:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 app.use(express.json());
 

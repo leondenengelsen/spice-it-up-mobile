@@ -42,6 +42,7 @@ services:
       FIREBASE_PROJECT_ID: spice-it-up
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      HOST: 0.0.0.0  # Allow connections from any IP
     env_file:
       - .env
     volumes:
@@ -49,7 +50,7 @@ services:
       - ./frontend:/app/frontend
       - /app/node_modules
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"  # Bind to all interfaces
     depends_on:
       - mysql
     command: npm run dev

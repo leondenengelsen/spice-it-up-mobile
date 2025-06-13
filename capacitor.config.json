@@ -1,5 +1,15 @@
 {
   "appId": "app.spiceitup",
   "appName": "spice-it-up",
-  "webDir": "frontend"
+  "webDir": "frontend",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }

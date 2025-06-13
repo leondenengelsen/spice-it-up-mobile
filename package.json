@@ -19,7 +19,11 @@
     "favorites": "open http://localhost:3000/favorites.html",
     "test-favorites": "open http://localhost:3000/test-favorites.html",
     "server": "node backend/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mobile-sync": "npx cap sync",
+    "mobile-dev": "npm run mobile-sync && npx cap run android",
+    "mobile-open": "npx cap open android",
+    "mobile-build": "npm run mobile-sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^7.3.0",
@@ -28,6 +32,7 @@
     "@capacitor/ios": "^7.3.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.9.0",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",

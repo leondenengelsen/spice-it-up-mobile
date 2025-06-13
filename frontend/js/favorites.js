@@ -4,6 +4,8 @@
 // Import Firebase modules
 import { auth } from './firebase/init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { getApiUrl } from './config.js';
+import { makeRequest } from './utils/http.js';
 
 // Global variables for authenticated user state
 let currentUserId = null;
@@ -24,7 +26,7 @@ async function getUserAllergies() {
       return [];
     }
 
-    const response = await fetch('/api/options/', {
+    const response = await fetch(`${getApiUrl()}/api/options/`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -98,27 +100,36 @@ window.removeFavorite = removeFavorite;
 // Function to get current user info from API
 async function getCurrentUser() {
   try {
+    console.log('🔍 Getting current user info...');
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
+      console.error('❌ No authentication token available');
       throw new Error('No authentication token available');
     }
+    console.log('✅ Found token in localStorage');
 
-    const response = await fetch('/api/auth/user-info', {
+    const apiUrl = `${getApiUrl()}/api/auth/user-info`;
+    console.log('🔗 Making request to:', apiUrl);
+
+    const response = await makeRequest(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
 
+    console.log('📡 Response status:', response.status);
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Failed to get user info:', errorText);
       throw new Error('Failed to get user info');
     }
 
     const userInfo = await response.json();
     currentUserId = userInfo.id;
-    console.log('✅ Current user ID:', currentUserId);
+    console.log('✅ Current user info:', userInfo);
     return userInfo;
   } catch (error) {
-    console.error('Error getting current user:', error);
+    console.error('❌ Error getting current user:', error);
     throw error;
   }
 }

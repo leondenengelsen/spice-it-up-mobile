@@ -1,5 +1,7 @@
 import { auth } from './init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { getApiUrl } from '../config.js';
+import { makeRequest } from '../utils/http.js';
 
 class AuthStateManager {
   constructor() {
@@ -9,7 +11,7 @@ class AuthStateManager {
       login: '/login.html',
       signup: '/signup.html',
       admin: '/admin.html',
-      verifyEmail: '/verify-email.html'  // New page for email verification notice
+      verifyEmail: '/verify-email.html'
     };
     
     // Initialize auth state listener
@@ -30,18 +32,12 @@ class AuthStateManager {
       console.log('👤 Auth state changed - User signed in:', {
         uid: user.uid,
         email: user.email,
-        displayName: user.displayName,
-        emailVerified: user.emailVerified,
-        metadata: {
-          creationTime: user.metadata.creationTime,
-          lastSignInTime: user.metadata.lastSignInTime
-        }
+        displayName: user.displayName
       });
       
+      // Get token
       const token = await user.getIdToken();
       localStorage.setItem('firebaseToken', token);
-      
-      // Get internal user ID will be handled by individual components as needed
       
       // Get the username with fallback logic
       let username = user.displayName;
@@ -69,7 +65,7 @@ class AuthStateManager {
           username: username
         });
         
-        const response = await fetch("/api/users", {
+        const response = await makeRequest(`${getApiUrl()}/api/users`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -96,39 +92,16 @@ class AuthStateManager {
         console.error("Error verifying user in backend:", error);
       }
       
-      // Store the timestamp to track first login and signup separately
-      const firstLoginTimestamp = localStorage.getItem('firstLoginTimestamp');
-      
-      // If this is the first time we're seeing this user in this browser
-      // We'll consider this part of the signup flow
-      if (!firstLoginTimestamp) {
-        console.log('📝 First login for this user in this browser');
-        localStorage.setItem('firstLoginTimestamp', Date.now().toString());
-        
-        // Only check email verification for first-time users
-        if (!user.emailVerified && currentPath !== this.pages.verifyEmail) {
-          console.log('📧 User needs email verification, redirecting...');
-          window.location.href = this.pages.verifyEmail;
-          return;
-        }
-      }
-      
-      // Check if user is admin only if accessing admin page
-      let isAdmin = false;
-      if (currentPath === this.pages.admin) {
-        isAdmin = await this.checkIfAdmin(token);
-      }
-      
-      if (currentPath === this.pages.login || currentPath === this.pages.signup) {
+      if (currentPath === this.pages.login || currentPath === this.pages.signup || currentPath === this.pages.verifyEmail) {
         // Redirect to main page if on auth pages
         window.location.href = this.pages.main;
-      } else if (currentPath === this.pages.admin && !isAdmin) {
+      } else if (currentPath === this.pages.admin && !await this.checkIfAdmin(token)) {
         // Redirect non-admin users away from admin page
         window.location.href = this.pages.main;
       }
       
       // Update UI for logged-in state
-      this.updateAuthUI(true, isAdmin);
+      this.updateAuthUI(true, await this.checkIfAdmin(token));
       
     } else {
       // User is signed out
@@ -156,7 +129,7 @@ class AuthStateManager {
 
   async checkIfAdmin(token) {
     try {
-      const response = await fetch('/api/auth/check-admin', {
+      const response = await makeRequest(`${getApiUrl()}/api/auth/check-admin`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
