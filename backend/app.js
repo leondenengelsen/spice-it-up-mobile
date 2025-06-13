@@ -19,8 +19,36 @@ console.log("✅ Loaded DB config:", {
 });
 
 // Enable CORS with specific options
+const allowedOrigins = [
+  'capacitor://localhost',
+  'http://localhost',
+  'http://localhost:3000',
+  'http://192.168.0.211:3000',
+  'https://spice-it-up-api.onrender.com',
+  'https://spice-it-up.onrender.com'
+];
+
+// Add any additional origins from environment variable
+if (process.env.ADDITIONAL_CORS_ORIGINS) {
+  const additionalOrigins = process.env.ADDITIONAL_CORS_ORIGINS.split(',');
+  allowedOrigins.push(...additionalOrigins);
+}
+
+console.log('🌐 CORS allowed origins:', allowedOrigins);
+
 app.use(cors({
-  origin: ['capacitor://localhost', 'http://localhost', 'http://localhost:3000', 'http://192.168.0.211:3000'],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('⚠️ CORS blocked request from:', origin);
+      return callback(new Error('Not allowed by CORS'));
+    }
+    
+    console.log('✅ CORS allowed request from:', origin);
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
