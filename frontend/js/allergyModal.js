@@ -122,7 +122,7 @@ export class AllergyModal {
       }
       
       // Call the API to save options
-      const response = await fetch('/api/options', {
+      const response = await fetch(`${getApiUrl()}/api/options`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

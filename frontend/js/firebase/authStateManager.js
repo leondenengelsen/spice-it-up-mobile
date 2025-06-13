@@ -1,7 +1,6 @@
 import { auth } from './init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from '../config.js';
-import { makeRequest } from '../utils/http.js';
 
 class AuthStateManager {
   constructor() {
@@ -65,7 +64,7 @@ class AuthStateManager {
           username: username
         });
         
-        const response = await makeRequest(`${getApiUrl()}/api/users`, {
+        const response = await fetch(`${getApiUrl()}/api/users`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -129,7 +128,7 @@ class AuthStateManager {
 
   async checkIfAdmin(token) {
     try {
-      const response = await makeRequest(`${getApiUrl()}/api/auth/check-admin`, {
+      const response = await fetch(`${getApiUrl()}/api/auth/check-admin`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

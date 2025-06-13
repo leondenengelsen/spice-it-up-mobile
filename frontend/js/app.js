@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
 
           
-          const saveResponse = await fetch('/api/save-suggestion', {
+          const saveResponse = await fetch(`${getApiUrl()}/api/save-suggestion`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',

@@ -5,7 +5,6 @@
 import { auth } from './firebase/init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from './config.js';
-import { makeRequest } from './utils/http.js';
 
 // Global variables for authenticated user state
 let currentUserId = null;
@@ -100,36 +99,29 @@ window.removeFavorite = removeFavorite;
 // Function to get current user info from API
 async function getCurrentUser() {
   try {
-    console.log('🔍 Getting current user info...');
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
-      console.error('❌ No authentication token available');
       throw new Error('No authentication token available');
     }
-    console.log('✅ Found token in localStorage');
 
     const apiUrl = `${getApiUrl()}/api/auth/user-info`;
-    console.log('🔗 Making request to:', apiUrl);
-
-    const response = await makeRequest(apiUrl, {
+    console.log('API URL for user info:', apiUrl);
+    const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
 
-    console.log('📡 Response status:', response.status);
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Failed to get user info:', errorText);
       throw new Error('Failed to get user info');
     }
 
     const userInfo = await response.json();
     currentUserId = userInfo.id;
-    console.log('✅ Current user info:', userInfo);
+    console.log('✅ Current user ID:', currentUserId);
     return userInfo;
   } catch (error) {
-    console.error('❌ Error getting current user:', error);
+    console.error('Error getting current user:', error);
     throw error;
   }
 }
@@ -174,9 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-
 function initializeFavoritesPage() {
+  console.log('initializeFavoritesPage called');
   loadFavorites();
 }
 
@@ -195,6 +186,7 @@ function loadFavorites() {
 }
 
 async function fetchFavoritesFromDatabase() {
+  console.log('fetchFavoritesFromDatabase called');
   const loadingState = document.getElementById('loading-state');
   const emptyState = document.getElementById('empty-state');
   const favoritesGrid = document.getElementById('favorites-grid');
@@ -207,7 +199,9 @@ async function fetchFavoritesFromDatabase() {
       return;
     }
 
-    const response = await fetch('/api/favorites', {
+    const apiUrl = `${getApiUrl()}/api/favorites`;
+    console.log('API URL for favorites:', apiUrl);
+    const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -316,7 +310,8 @@ async function removeFavorite(recipeId) {
     // Show feedback message
     showFeedback('Removing from favorites...');
     
-    const response = await fetch(`/api/favorites/recipe/${recipeId}`, {
+    const apiUrl = `${getApiUrl()}/api/favorites/recipe/${recipeId}`;
+    const response = await fetch(apiUrl, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -376,7 +371,8 @@ function showFeedback(message) {
 
 async function showFullRecipe(recipeId) {
   try {
-    const response = await fetch(`/api/recipes/${recipeId}`);
+    const apiUrl = `${getApiUrl()}/api/recipes/${recipeId}`;
+    const response = await fetch(apiUrl);
     if (!response.ok) {
       throw new Error('Failed to fetch recipe');
     }
@@ -581,7 +577,8 @@ async function addToFavorites(recipe) {
       recipe_id: recipe.recipe_id
     });
     
-    const response = await fetch('/api/favorites', {
+    const apiUrl = `${getApiUrl()}/api/favorites`;
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',

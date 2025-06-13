@@ -12,8 +12,8 @@ const config = {
   }
 };
 
-// Detect if we're running in Capacitor
-const isCapacitor = window.Capacitor && window.Capacitor.isNative;
+// Improved Capacitor detection for mobile
+const isCapacitor = !!(window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform !== 'web'));
 
 // Get the current environment
 const getCurrentEnvironment = () => {
@@ -33,7 +33,7 @@ export const getApiUrl = () => {
   const env = getCurrentEnvironment();
   const platform = isCapacitor ? 'mobile' : 'browser';
   const url = isCapacitor ? config[env].mobile : config[env].browser;
-  console.log('🔗 Using API URL:', { env, platform, url });
+  console.log(`🔗 Using API URL: ${url} (env: ${env}, platform: ${platform})`);
   return url;
 };
 
