@@ -3,6 +3,10 @@
 // Import favorites functions
 import { addToFavorites, getCurrentUser } from './favorites.js';
 import { getApiUrl } from './config.js';
+import { getUserAllergies, formatAllergyNote } from './allergies.js';
+
+// Export the functions for use in other modules
+export { getUserAllergies, formatAllergyNote };
 
 // ========================
 // UTILITY FUNCTIONS

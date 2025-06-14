@@ -4,6 +4,7 @@ console.log('🔄 [OPTIONS] Script starting to load - BEFORE IMPORTS');
 import { handleLogout } from './firebase/auth.js';
 import { AllergyModal } from './allergyModal.js';
 import { getApiUrl, isNativeApp } from './config.js';
+import { saveAllOptions, getLocalAllergies } from './allergies.js';
 
 console.log('🔄 [OPTIONS] Script loaded - AFTER IMPORTS');
 
@@ -236,46 +237,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       try {
-        console.log('🔄 [OPTIONS] Saving portions and adventurousness to database');
-        console.log('🔗 [OPTIONS] Using API URL:', getApiUrl());
+        console.log('🔄 [OPTIONS] Starting to save all options to database');
         
-        // Save to localStorage
-        localStorage.setItem('portions', portionSlider.value);
-        localStorage.setItem('adventurousness', adventureSlider.value);
-        
-        // Get current allergies from localStorage to preserve them
-        const currentAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-        console.log('📊 [OPTIONS] Preserving current allergies:', currentAllergies);
-        
-        const requestBody = {
+        // Get current values
+        const options = {
           portions: parseInt(portionSlider.value),
           adventurousness: parseInt(adventureSlider.value),
-          allergies: currentAllergies  // Save at root level
+          allergies: getLocalAllergies() // Get allergies from localStorage
         };
-        console.log('📦 [OPTIONS] Request body:', JSON.stringify(requestBody, null, 2));
         
-        const response = await fetch(`${getApiUrl()}/api/options`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ [OPTIONS] Failed to save settings:', response.status, response.statusText);
-          console.error('❌ [OPTIONS] Error response:', errorText);
+        console.log('🔄 [OPTIONS] Current values to save:', options);
+        
+        // Save all options at once
+        console.log('🔄 [OPTIONS] Calling saveAllOptions with:', options);
+        const success = await saveAllOptions(options);
+        console.log('✅ [OPTIONS] saveAllOptions result:', success);
+        
+        if (!success) {
           throw new Error('Failed to save settings');
         }
-
-        const responseData = await response.json();
-        console.log('✅ [OPTIONS] Successfully saved settings:', responseData);
         
         // Show success notification
         Toastify({
-          text: "Portions and adventurousness saved ✅",
+          text: "All preferences saved ✅",
           duration: 3000,
           gravity: "bottom",
           position: "center",
@@ -284,15 +268,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             color: "var(--suggestion-text)"
           }
         }).showToast();
-
-        // Redirect after a short delay to allow the user to see the success message
-        setTimeout(() => {
-          window.location.href = '/index.html';
-        }, 1000);
         
       } catch (error) {
-        console.error('❌ [OPTIONS] Error saving options:', error);
-        console.error('❌ [OPTIONS] Error stack:', error.stack);
+        console.error('❌ [OPTIONS] Error saving settings:', error);
         Toastify({
           text: "Failed to save settings. Please try again.",
           duration: 3000,

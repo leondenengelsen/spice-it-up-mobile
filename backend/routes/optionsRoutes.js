@@ -9,22 +9,34 @@ const { getUserAdventurousness } = require('../controllers/userOptionsController
 // Save or update user options
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { portions, adventurousness, other_settings } = req.body;
+    console.log('🔄 [OPTIONS ROUTE] Received request body:', JSON.stringify(req.body, null, 2));
+    console.log('🔄 [OPTIONS ROUTE] User ID:', req.user.id);
+    
+    const { portions, adventurousness, allergies } = req.body;
     const user_id = req.user.id;
     
-    // Extract allergies from other_settings
-    const allergies = other_settings?.allergies || [];
+    // Ensure allergies is an array
+    const allergiesArray = Array.isArray(allergies) ? allergies : [];
+    
+    console.log('🔄 [OPTIONS ROUTE] Processed data:', {
+      user_id,
+      portions,
+      adventurousness,
+      allergies: allergiesArray
+    });
     
     // Use REPLACE INTO to handle both insert and update
     await db.query(
       `REPLACE INTO options (user_id, portions, adventurousness, allergies)
        VALUES (?, ?, ?, ?)`,
-      [user_id, portions, adventurousness, JSON.stringify(allergies)]
+      [user_id, portions, adventurousness, JSON.stringify(allergiesArray)]
     );
     
+    console.log('✅ [OPTIONS ROUTE] Successfully saved options to database');
     res.json({ success: true });
   } catch (err) {
-    console.error('Error saving options:', err);
+    console.error('❌ [OPTIONS ROUTE] Error saving options:', err);
+    console.error('❌ [OPTIONS ROUTE] Error stack:', err.stack);
     res.status(500).json({ error: 'Failed to save options' });
   }
 });

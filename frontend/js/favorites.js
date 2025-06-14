@@ -5,6 +5,7 @@
 import { auth } from './firebase/init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from './config.js';
+import { getUserAllergies, formatAllergyNote } from './allergies.js';
 
 // Global variables for authenticated user state
 let currentUserId = null;
@@ -12,82 +13,6 @@ let currentUserId = null;
 // ========================
 // UTILITY FUNCTIONS
 // ========================
-
-/**
- * Fetch user allergies from options endpoint
- * @returns {Promise<Array>} Array of allergies or empty array
- */
-async function getUserAllergies() {
-  try {
-    const token = localStorage.getItem('firebaseToken');
-    if (!token) {
-      console.log('🔍 No Firebase token found for getUserAllergies');
-      return [];
-    }
-
-    const response = await fetch(`${getApiUrl()}/api/options/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      console.error('❌ Failed to fetch user allergies:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
-      return [];
-    }
-    
-    const options = await response.json();
-    console.log('✅ User options fetched:', options);
-    // Check both locations for allergies, like the options page does
-    return options.allergies || (options.other_settings && options.other_settings.allergies) || [];
-  } catch (error) {
-    console.error('❌ Error fetching user allergies:', error);
-    return [];
-  }
-}
-
-/**
- * Format allergy note for display
- * @param {Array} allergies - Array of allergy strings
- * @returns {string} Formatted allergy note or empty string
- */
-function formatAllergyNote(allergies) {
-  if (!allergies || allergies.length === 0) {
-    return '';
-  }
-
-  // Map allergy values to display labels
-  const allergyLabels = {
-    milk: 'Milk',
-    eggs: 'Eggs', 
-    peanuts: 'Peanuts',
-    tree_nuts: 'Tree Nuts',
-    soy: 'Soy',
-    wheat: 'Wheat',
-    fish: 'Fish',
-    shellfish: 'Shellfish',
-    sesame: 'Sesame',
-    gluten: 'Gluten',
-    mustard: 'Mustard',
-    celery: 'Celery',
-    lupin: 'Lupin',
-    sulfites: 'Sulfites',
-    nightshades: 'Nightshades',
-    corn: 'Corn',
-    meat: 'Meat',
-    dairy: 'All Dairy',
-    vegan: 'Vegan',
-    vegetarian: 'Vegetarian'
-  };
-
-  const displayAllergies = allergies.map(allergy => 
-    allergyLabels[allergy] || allergy
-  ).join(', ');
-
-  return `${displayAllergies} | allergy-friendly`;
-}
 
 // Export only the functions needed by other modules
 export { addToFavorites, getCurrentUser };

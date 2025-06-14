@@ -1,5 +1,6 @@
 // Allergy modal functionality
 import { getApiUrl, isNativeApp } from './config.js';
+import { getAllAvailableAllergies } from './allergies.js';
 
 export class AllergyModal {
   constructor() {
@@ -47,29 +48,7 @@ export class AllergyModal {
   }
 
   getAllergyCheckboxes() {
-    const allergies = [
-      { value: 'milk', label: 'Milk' },
-      { value: 'eggs', label: 'Eggs' },
-      { value: 'peanuts', label: 'Peanuts' },
-      { value: 'tree_nuts', label: 'Tree Nuts' },
-      { value: 'soy', label: 'Soy' },
-      { value: 'wheat', label: 'Wheat' },
-      { value: 'fish', label: 'Fish' },
-      { value: 'shellfish', label: 'Shellfish' },
-      { value: 'sesame', label: 'Sesame' },
-      { value: 'gluten', label: 'Gluten' },
-      { value: 'mustard', label: 'Mustard' },
-      { value: 'celery', label: 'Celery' },
-      { value: 'lupin', label: 'Lupin' },
-      { value: 'sulfites', label: 'Sulfites' },
-      { value: 'nightshades', label: 'Nightshades' },
-      { value: 'corn', label: 'Corn' },
-      { value: 'meat', label: 'Meat' },
-      { value: 'dairy', label: 'All Dairy' },
-      { value: 'vegan', label: 'Vegan' },
-      { value: 'vegetarian', label: 'Vegetarian' }
-    ];
-
+    const allergies = getAllAvailableAllergies();
     return allergies.map(allergy => `
       <label class="allergy-checkbox">
         <input type="checkbox" name="modal-allergies" 
@@ -107,47 +86,23 @@ export class AllergyModal {
     });
   }
 
-  async save() {
+  save() {
     try {
+      console.log('🔄 [ALLERGY MODAL] Starting save process');
       const allergies = Array.from(this.selectedAllergies);
+      console.log('🔄 [ALLERGY MODAL] Selected allergies:', allergies);
       
-      // Get current settings from localStorage
-      const currentSettings = {
-        portions: parseInt(localStorage.getItem('portions') || '4'),
-        adventurousness: parseInt(localStorage.getItem('adventurousness') || '1')
-      };
-
-      // Get Firebase token
-      const token = localStorage.getItem('firebaseToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
+      // ONLY update localStorage
+      localStorage.setItem('allergies', JSON.stringify(allergies));
+      console.log('✅ [ALLERGY MODAL] Updated localStorage with allergies');
       
-      // Call the API to save options
-      const response = await fetch(`${getApiUrl()}/api/options`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          portions: currentSettings.portions,
-          adventurousness: currentSettings.adventurousness,
-          allergies: allergies  // Save at root level
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save allergies');
-      }
-
-      // Call the onSave callback with selected allergies
+      // Call the onSave callback to update UI
       this.onSave(allergies);
+      console.log('✅ [ALLERGY MODAL] Called onSave callback');
       
       // Show success notification
       Toastify({
-        text: "Allergy preferences saved ✅",
+        text: "Allergy preferences updated (click Save Changes to save to account)",
         duration: 3000,
         gravity: "bottom",
         position: "center",
@@ -159,11 +114,9 @@ export class AllergyModal {
 
       this.close();
     } catch (error) {
-      console.error('Error saving allergies:', error);
+      console.error('Error updating allergies:', error);
       Toastify({
-        text: error.message === 'Not authenticated' 
-          ? "Please log in to save preferences" 
-          : "Failed to save allergies. Please try again.",
+        text: "Failed to update allergies. Please try again.",
         duration: 3000,
         gravity: "bottom",
         position: "center",
@@ -172,24 +125,19 @@ export class AllergyModal {
           color: "white"
         }
       }).showToast();
-
-      // If not authenticated, redirect to login
-      if (error.message === 'Not authenticated') {
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 2000);
-      }
     }
   }
 
   close() {
-    this.modal.remove();
+    if (this.modal && this.modal.parentNode) {
+      this.modal.parentNode.removeChild(this.modal);
+    }
     this.modal = null;
   }
 
   show() {
-    if (!this.modal) {
-      this.createModal();
+    if (this.modal) {
+      this.modal.style.display = 'block';
     }
   }
 } 
