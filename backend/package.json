@@ -8,6 +8,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@google-cloud/speech": "^7.1.0",
     "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -17,4 +18,4 @@
     "nodemon": "^2.0.22",
     "openai": "^4.98.0"
   }
-} 
+}

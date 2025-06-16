@@ -44,6 +44,7 @@ services:
       FIREBASE_PROJECT_ID: spice-it-up
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_CLOUD_API_KEY: ${GOOGLE_CLOUD_API_KEY}
       HOST: 0.0.0.0  # Allow connections from any IP
     env_file:
       - .env

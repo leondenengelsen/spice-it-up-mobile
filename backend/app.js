@@ -10,6 +10,7 @@ const favoritesRoutes = require('./routes/favoritesRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
+const speechRoutes = require('./routes/speechRoutes');
 require('dotenv').config();
 
 console.log("✅ Loaded DB config:", {
@@ -67,12 +68,14 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', aiRoutes);
+app.use('/api', speechRoutes);
 app.use('/api/options', optionsRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/recipes', recipeRoutes);
-// Serve frontend static files (move this AFTER API routes)
+
+// Serve frontend static files (AFTER all API routes)
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 module.exports = app;

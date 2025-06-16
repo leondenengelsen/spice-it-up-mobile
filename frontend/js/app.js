@@ -88,6 +88,93 @@ function formatAllergyNote(allergies) {
 // MAIN APP LOGIC
 // ========================
 
+// Function to handle generating recipes - defined once, outside DOMContentLoaded
+async function generateRecipes(showLoading = false) {
+  console.log('generateRecipes called with showLoading:', showLoading);
+  const promptInput = document.getElementById('user-input');
+  if (!promptInput) {
+    console.log('No input field found');
+    return;
+  }
+  const prompt = promptInput.value;
+  if (!prompt) {
+    console.log('No prompt text found');
+    return;
+  }
+  console.log('Generating recipes for prompt:', prompt);
+  
+  const section = document.getElementById('recipes-section');
+  if (!section) {
+    console.log('No recipes section found');
+    return;
+  }
+  
+  // Show loading state if requested
+  if (showLoading) {
+    console.log('Showing loading state');
+    section.innerHTML = '<div class="full-recipe-loading">Loading ideas...</div>';
+  }
+  
+  try {
+    // Get portions from localStorage
+    const portions = localStorage.getItem('portions') || 4;
+    console.log('Using portions:', portions);
+    
+    // Get current page mode (requires pageContext.js to be loaded)
+    const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
+    console.log('Current page mode:', mode);
+    
+    // Get Firebase token for authentication
+    const token = localStorage.getItem('firebaseToken');
+    if (!token) {
+      console.log('No Firebase token found');
+      showEmptyState('Please log in to generate recipes.');
+      return;
+    }
+    
+    console.log('Sending request to generate recipes...');
+    const res = await fetch(`${getApiUrl()}/api/generate`, {  // Removed trailing slash
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ 
+        prompt,
+        portions: parseInt(portions),
+        mode: mode
+      })
+    });
+    
+    if (!res.ok) {
+      console.error('Server error:', res.status, res.statusText);
+      const errorText = await res.text();
+      console.error('Error response:', errorText);
+      throw new Error('Server error');
+    }
+    
+    const data = await res.json();
+    console.log('Received response from server:', data);
+    
+    if (data.message) {
+      console.log('Rendering recipes');
+      renderRecipes(data.message);
+    } else if (data.response) {  // Handle alternative response format
+      console.log('Rendering recipes from response field');
+      renderRecipes(data.response);
+    } else {
+      console.log('No recipes in response');
+      showEmptyState('No recipes returned. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error generating recipes:', error);
+    showEmptyState('Error generating recipes. Please try again.');
+  }
+}
+
+// Make generateRecipes available globally
+window.generateRecipes = generateRecipes;
+
 document.addEventListener('DOMContentLoaded', () => {
   // Navigation
   const mainPage = document.getElementById('main-page');
@@ -116,71 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
       mode = mode === 'veganize' ? 'healthify' : 'veganize';
       toggleBtn.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
     };
-  }
-
-  // Function to handle generating recipes
-  async function generateRecipes(showLoading = false) {
-    const promptInput = document.getElementById('user-input');
-    if (!promptInput) return;
-    const prompt = promptInput.value;
-    if (!prompt) return;
-    
-    const section = document.getElementById('recipes-section');
-    
-    // Show loading state if requested
-    if (showLoading) {
-      section.innerHTML = '<div class="full-recipe-loading">Loading ideas...</div>';
-    }
-    
-    try {
-      // Get portions from localStorage
-      const portions = localStorage.getItem('portions') || 4;
-      
-      // Get current page mode (requires pageContext.js to be loaded)
-      const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
-      
-      // Get Firebase token for authentication
-      const token = localStorage.getItem('firebaseToken');
-      if (!token) {
-        showEmptyState('Please log in to generate recipes.');
-        return;
-      }
-      
-      // Debug: Check user's adventurousness setting
-      try {
-        const optionsResponse = await fetch(`${getApiUrl()}/api/options/`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (optionsResponse.ok) {
-          const userOptions = await optionsResponse.json();
-        }
-      } catch (error) {
-        console.error("Failed to fetch user options for debugging:", error);
-      }
-      
-      const res = await fetch(`${getApiUrl()}/api/generate/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          prompt,
-          portions: parseInt(portions),
-          mode: mode
-        })
-      });
-      if (!res.ok) throw new Error('Server error');
-      const data = await res.json();
-      if (data.message) {
-        renderRecipes(data.message);
-      } else {
-        showEmptyState('No recipes returned. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error generating recipes:', error);
-      showEmptyState('Error generating recipes. Please try again.');
-    }
   }
 
   // Send prompt to Gemini

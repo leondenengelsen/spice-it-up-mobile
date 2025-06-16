@@ -1,3 +1,6 @@
+// Import getApiUrl from config
+import { getApiUrl } from './config.js';
+
 class SpeechRecorder {
     constructor() {
         this.mediaRecorder = null;
@@ -7,9 +10,19 @@ class SpeechRecorder {
         this.recordingTimeout = null;
         this.maxRecordingTime = 10000; // 10 seconds
         
+        // Bind methods to preserve this context
+        this.startRecording = this.startRecording.bind(this);
+        this.stopRecording = this.stopRecording.bind(this);
+        
         // Listen for recording events from the interface manager
-        window.addEventListener('startRecording', () => this.startRecording());
-        window.addEventListener('stopRecording', () => this.stopRecording());
+        window.addEventListener('startRecording', () => {
+            console.log('🎤 Received startRecording event in SpeechRecorder');
+            this.startRecording();
+        });
+        window.addEventListener('stopRecording', () => {
+            console.log('⏹️ Received stopRecording event in SpeechRecorder');
+            this.stopRecording();
+        });
     }
 
     async startRecording() {
@@ -119,7 +132,7 @@ class SpeechRecorder {
             }
 
             console.log('Sending audio to server...');
-            const response = await fetch('/api/speech-to-text', {
+            const response = await fetch(`${getApiUrl()}/api/speech-to-text`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -129,15 +142,42 @@ class SpeechRecorder {
             });
 
             if (!response.ok) {
+                console.error('Failed to transcribe audio:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
                 throw new Error('Failed to transcribe audio');
             }
 
             const data = await response.json();
             console.log('Received transcription:', data);
             if (data.text) {
+                console.log('Setting input field value to:', data.text);
                 const inputField = document.getElementById('user-input');
+                if (!inputField) {
+                    console.error('Input field not found');
+                    return;
+                }
                 inputField.value = data.text;
-                inputField.dispatchEvent(new Event('input'));
+                console.log('Input field value set to:', inputField.value);
+                
+                console.log('Dispatching input event to trigger recipe generation');
+                inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // Also try to directly generate recipes
+                console.log('Checking if generateRecipes is available:', typeof window.generateRecipes);
+                if (typeof window.generateRecipes === 'function') {
+                    console.log('Directly calling generateRecipes after transcription');
+                    try {
+                        await window.generateRecipes(true);
+                        console.log('generateRecipes called successfully');
+                    } catch (error) {
+                        console.error('Error calling generateRecipes:', error);
+                    }
+                } else {
+                    console.error('generateRecipes function not found on window');
+                }
+            } else {
+                console.log('No transcription text received');
             }
         } catch (error) {
             console.error('Error sending audio to server:', error);

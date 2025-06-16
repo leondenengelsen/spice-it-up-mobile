@@ -3,7 +3,10 @@ class InterfaceManager {
         this.talkBtn = document.getElementById('talk-btn');
         this.inputField = document.getElementById('user-input');
         this.pressTimer = null;
-        this.SHORT_PRESS_DURATION = 200; // milliseconds
+        this.SHORT_PRESS_DURATION = 100; // milliseconds
+        this.isRecording = false;
+        this.isPressed = false;
+        this.wasLongPress = false;  // Track if this was a long press
         
         // Bind methods
         this.handlePressStart = this.handlePressStart.bind(this);
@@ -15,9 +18,18 @@ class InterfaceManager {
 
     setupEventListeners() {
         // Touch events
-        this.talkBtn.addEventListener('touchstart', this.handlePressStart);
-        this.talkBtn.addEventListener('touchend', this.handlePressEnd);
-        this.talkBtn.addEventListener('touchcancel', this.handlePressCancel);
+        this.talkBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.handlePressStart(e);
+        });
+        this.talkBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.handlePressEnd(e);
+        });
+        this.talkBtn.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            this.handlePressCancel(e);
+        });
 
         // Mouse events (for testing)
         this.talkBtn.addEventListener('mousedown', this.handlePressStart);
@@ -26,54 +38,77 @@ class InterfaceManager {
     }
 
     handlePressStart(e) {
-        console.log('Press start');
+        console.log('Press start - isPressed:', this.isPressed, 'isRecording:', this.isRecording);
+        if (this.isPressed) return;
         
-        // Add pressed class for visual feedback
+        this.isPressed = true;
+        this.wasLongPress = false;  // Reset long press state
         this.talkBtn.classList.add('button-pressed');
         
         // Start a timer to detect long press
         this.pressTimer = setTimeout(() => {
-            console.log('Long press detected');
-            // Start recording
+            console.log('Long press detected - starting recording');
+            this.isRecording = true;
+            this.wasLongPress = true;  // Mark this as a long press
             window.dispatchEvent(new CustomEvent('startRecording'));
         }, this.SHORT_PRESS_DURATION);
     }
 
     handlePressEnd(e) {
-        console.log('Press end');
+        console.log('Press end - isPressed:', this.isPressed, 'isRecording:', this.isRecording, 'wasLongPress:', this.wasLongPress);
+        if (!this.isPressed) return;
         
-        // Remove pressed class
+        this.isPressed = false;
         this.talkBtn.classList.remove('button-pressed');
         
+        // Clear the press timer
         if (this.pressTimer) {
-            // If timer exists, it was a short press
             clearTimeout(this.pressTimer);
             this.pressTimer = null;
             
-            // Handle short press (send text if there's text)
-            if (this.inputField.value.trim()) {
-                console.log('Handling short press');
-                this.inputField.dispatchEvent(new Event('input'));
+            // Handle short press - directly call generateRecipes
+            const inputField = document.getElementById('user-input');
+            if (inputField && inputField.value.trim()) {
+                console.log('Handling short press - generating recipes');
+                // Check input validation before proceeding
+                if (window.recipeInputValidator && !window.recipeInputValidator.isValid()) {
+                    window.recipeInputValidator.showToast();
+                    return;
+                }
+                // Call generateRecipes directly if it exists
+                if (typeof window.generateRecipes === 'function') {
+                    window.generateRecipes(true);
+                }
             }
-        } else {
-            // If no timer, it was a long press that was held
-            console.log('Ending long press');
+        }
+        
+        // Only stop recording if this was a long press
+        if (this.isRecording && this.wasLongPress) {
+            console.log('Stopping recording from button release (long press)');
+            this.isRecording = false;
+            this.wasLongPress = false;
             window.dispatchEvent(new CustomEvent('stopRecording'));
         }
     }
 
-    handlePressCancel() {
-        console.log('Press canceled');
+    handlePressCancel(e) {
+        console.log('Press cancel - isPressed:', this.isPressed, 'isRecording:', this.isRecording, 'wasLongPress:', this.wasLongPress);
+        if (!this.isPressed) return;
         
-        // Remove pressed class
+        this.isPressed = false;
         this.talkBtn.classList.remove('button-pressed');
         
         // Clear timer if it exists
         if (this.pressTimer) {
             clearTimeout(this.pressTimer);
             this.pressTimer = null;
-        } else {
-            // If no timer, recording was in progress
+        }
+        
+        // Only stop recording if this was a long press
+        if (this.isRecording && this.wasLongPress) {
+            console.log('Stopping recording from press cancel (long press)');
+            this.isRecording = false;
+            this.wasLongPress = false;
             window.dispatchEvent(new CustomEvent('stopRecording'));
         }
     }
