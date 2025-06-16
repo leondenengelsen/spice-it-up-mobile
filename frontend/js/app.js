@@ -437,6 +437,306 @@ window.toggleHeadline = toggleHeadline;
 window.toggleInputContainer = toggleInputContainer;
 window.toggleRestartButton = toggleRestartButton;
 
+// Handle click on a recipe idea box
+async function handleRecipeClick(idx, idea) {
+  const section = document.getElementById('recipes-section');
+  
+  // Save current scroll position
+  const scrollPosition = window.scrollY;
+  
+  // Hide chili button and restart button when showing full recipe
+  toggleChiliButton(false);
+  toggleRestartButton(false);
+  
+  // Clear the recipe section and show loading state
+  section.innerHTML = `
+    <div class="full-recipe-modal">
+      <div class="recipe-header">
+        <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
+      </div>
+      <div class="full-recipe-loading">Creating detailed recipe...</div>
+    </div>
+  `;
+  
+  try {
+    // Get portions from localStorage for detailed recipe generation
+    const portions = localStorage.getItem('portions') || 4;
+    
+    // Get Firebase token for authentication
+    const token = localStorage.getItem('firebaseToken');
+    if (!token) {
+      section.innerHTML = `
+        <div class="full-recipe-modal">
+          <div class="recipe-header">
+            <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
+          </div>
+          <div class="full-recipe-content">Please log in to view detailed recipes.</div>
+          <button id="back-to-ideas" class="back-button">← Back to ideas</button>
+        </div>
+      `;
+      return;
+    }
+    
+    const res = await fetch(`${getApiUrl()}/api/generate/`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ 
+        prompt: `Generate detailed recipe for: ${idea.title}`,
+        portions: parseInt(portions),
+        mode: window.PageContext ? window.PageContext.getCurrentPageMode() : 'general',
+        isDetailedRecipe: true,
+        recipeIdea: {
+          emoji: idea.emoji,
+          title: idea.title,
+          desc: idea.desc
+        }
+      })
+    });
+    
+    if (!res.ok) throw new Error('Server error');
+    const data = await res.json();
+    
+    if (data.message && !/I cannot provide a full recipe|my purpose is to generate three/i.test(data.message)) {
+      // Get user allergies for display
+      const allergies = await getUserAllergies();
+      const allergyNote = formatAllergyNote(allergies);
+      const allergyHtml = allergyNote ? `<div class="allergy-note">${allergyNote}</div>` : '';
+      
+      // Create the recipe content
+      section.innerHTML = `
+        <div class="full-recipe-modal">
+          <div class="recipe-header">
+            <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
+            <button class="favorite-btn" id="favorite-recipe" aria-label="Add to favorites">
+              <span class="heart-icon">♡</span>
+            </button>
+          </div>
+          ${allergyHtml}
+          <div class="full-recipe-content">${data.message.replace(/\n/g, '<br>')}</div>
+          <button id="back-to-ideas" class="back-button">← Back to ideas</button>
+        </div>
+      `;
+      
+      // Save the recipe to the database with the already-generated content
+      let savedRecipeId = null;
+      try {
+        // Parse the recipe content into sections
+        const recipeContent = data.message;
+        
+        // Extract ingredients section
+        const ingredientsMatch = recipeContent.match(/ingredients:?([\s\S]*?)(?:instructions|directions|method|steps|preparation)/i);
+        const ingredients = ingredientsMatch ? ingredientsMatch[1].trim().split('\n')
+          .filter(line => line.trim().length > 0)
+          .map(line => {
+            const match = line.trim().match(/^[-*•]?\s*(?:(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?)?\s*(.+)$/);
+            if (match) {
+              return {
+                quantity: match[1] || null,
+                unit: match[2] || null,
+                name: match[3].trim()
+              };
+            }
+            return { name: line.trim() };
+          }) : [];
+
+        // Extract instructions/steps section
+        const stepsMatch = recipeContent.match(/(?:instructions|directions|method|steps|preparation):?([\s\S]*?)(?:(?:tips|notes|variations):|$)/i);
+        const steps = stepsMatch ? stepsMatch[1].trim().split('\n')
+          .filter(line => line.trim().length > 0)
+          .map(line => line.trim().replace(/^[\d#*•.\-]+\s*/, '').trim()) : [];
+
+        // Extract tips section if it exists
+        const tipsMatch = recipeContent.match(/(?:tips|notes|variations):?([\s\S]*?)$/i);
+        const tips = tipsMatch ? tipsMatch[1].trim() : '';
+
+        // Get current page mode for saving
+        const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
+        
+        // Create the request body
+        const requestBody = {
+          title: `${idea.emoji} ${idea.title}`,
+          description: recipeContent,
+          ingredients: JSON.stringify(ingredients),
+          instructions: stepsMatch ? stepsMatch[1].trim() : '',
+          steps: JSON.stringify(steps),
+          portions: parseInt(localStorage.getItem('portions') || '4'),
+          mode: mode
+        };
+        
+        const saveResponse = await fetch(`${getApiUrl()}/api/save-suggestion`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!saveResponse.ok) {
+          throw new Error('Failed to save recipe');
+        }
+
+        const saveResult = await saveResponse.json();
+        if (saveResult.success && saveResult.recipe_id) {
+          savedRecipeId = saveResult.recipe_id;
+        }
+      } catch (saveError) {
+        console.error('Failed to save recipe to database:', saveError);
+      }
+      
+      // Add event listener to the back button
+      document.getElementById('back-to-ideas').addEventListener('click', () => {
+        const originalText = section.getAttribute('data-original-text');
+        if (originalText) {
+          renderRecipes(originalText);
+          window.scrollTo(0, scrollPosition);
+        }
+      }, { once: true });
+      
+      // Add event listener to the favorite button
+      const favoriteBtn = document.getElementById('favorite-recipe');
+      if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', async () => {
+          try {
+            // Disable button during request
+            favoriteBtn.disabled = true;
+            favoriteBtn.style.opacity = '0.6';
+
+            const isFavorited = favoriteBtn.classList.contains('favorited');
+            
+            if (isFavorited) {
+              // Remove from favorites
+              const response = await fetch(`${getApiUrl()}/api/favorites/recipe/${savedRecipeId}`, {
+                method: 'DELETE',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to remove from favorites');
+              }
+
+              // Update UI to show unfavorited state
+              const heartIcon = favoriteBtn.querySelector('.heart-icon');
+              heartIcon.textContent = '♡';
+              favoriteBtn.classList.remove('favorited');
+              favoriteBtn.setAttribute('aria-label', 'Add to favorites');
+
+              // Show feedback
+              const feedbackDiv = document.createElement('div');
+              feedbackDiv.className = 'favorite-feedback';
+              feedbackDiv.textContent = 'Removed from favorites!';
+              document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
+
+              // Remove feedback after a few seconds
+              setTimeout(() => {
+                feedbackDiv.style.opacity = '0';
+                setTimeout(() => feedbackDiv.remove(), 500);
+              }, 2000);
+            } else {
+              // Add to favorites
+              const recipeData = {
+                emoji: idea.emoji,
+                title: idea.title,
+                description: idea.desc,
+                fullRecipe: data.message,
+                recipe_id: savedRecipeId
+              };
+              
+              const success = await addToFavorites(recipeData);
+              
+              if (success) {
+                // Change the heart icon to show it's been favorited
+                const heartIcon = favoriteBtn.querySelector('.heart-icon');
+                heartIcon.textContent = '❤️';
+                favoriteBtn.classList.add('favorited');
+                favoriteBtn.setAttribute('aria-label', 'Remove from favorites');
+                
+                // Show feedback
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'favorite-feedback';
+                feedbackDiv.textContent = 'Added to favorites!';
+                document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
+                
+                // Remove feedback after a few seconds
+                setTimeout(() => {
+                  feedbackDiv.style.opacity = '0';
+                  setTimeout(() => feedbackDiv.remove(), 500);
+                }, 2000);
+              } else {
+                throw new Error('Recipe already exists in favorites or failed to add');
+              }
+            }
+
+            // Re-enable button after operation completes
+            favoriteBtn.disabled = false;
+            favoriteBtn.style.opacity = '1';
+            
+          } catch (error) {
+            console.error('❌ Error managing favorites:', error);
+            
+            // Re-enable button on error
+            favoriteBtn.disabled = false;
+            favoriteBtn.style.opacity = '1';
+            
+            alert('Failed to update favorites. Please try again.');
+          }
+        });
+      }
+    } else {
+      section.innerHTML = `
+        <div class="full-recipe-modal">
+          <div class="recipe-header">
+            <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
+          </div>
+          <div class="full-recipe-error">Sorry, I couldn't create a detailed recipe. Please try another suggestion.</div>
+          <button id="back-to-ideas" class="back-button">← Back to ideas</button>
+        </div>
+      `;
+      
+      // Add event listener to the back button - use once:true to prevent multiple triggers
+      document.getElementById('back-to-ideas').addEventListener('click', () => {
+        const originalText = section.getAttribute('data-original-text');
+        if (originalText) {
+          renderRecipes(originalText);
+          // Restore scroll position
+          window.scrollTo(0, scrollPosition);
+        }
+      }, { once: true });
+    }
+  } catch (err) {
+    section.innerHTML = `
+      <div class="full-recipe-modal">
+        <div class="recipe-header">
+          <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
+        </div>
+        <div class="full-recipe-error">Sorry, there was an error while creating this recipe. Please try again later.</div>
+        <button id="back-to-ideas" class="back-button">← Back to ideas</button>
+      </div>
+    `;
+    
+    // Add event listener to the back button - use once:true to prevent multiple triggers
+    document.getElementById('back-to-ideas').addEventListener('click', () => {
+      const originalText = section.getAttribute('data-original-text');
+      if (originalText) {
+        renderRecipes(originalText);
+        // Restore scroll position
+        window.scrollTo(0, scrollPosition);
+      }
+    }, { once: true });
+    
+    console.error('Full recipe fetch error:', err);
+  }
+}
+
+// Make handleRecipeClick available globally
+window.handleRecipeClick = handleRecipeClick;
+
 document.addEventListener('DOMContentLoaded', () => {
   // Navigation
   const mainPage = document.getElementById('main-page');
@@ -530,310 +830,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Handle click on a recipe idea box
-  async function handleRecipeClick(idx, idea) {
-    const section = document.getElementById('recipes-section');
-    
-    // Save current scroll position
-    const scrollPosition = window.scrollY;
-    
-    // Hide chili button and restart button when showing full recipe
-    toggleChiliButton(false);
-    toggleRestartButton(false);
-    
-    // Clear the recipe section and show loading state
-    section.innerHTML = `
-      <div class="full-recipe-modal">
-        <div class="recipe-header">
-          <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
-        </div>
-        <div class="full-recipe-loading">Creating detailed recipe...</div>
-      </div>
-    `;
-    
-    try {
-      // Get portions from localStorage for detailed recipe generation
-      const portions = localStorage.getItem('portions') || 4;
-      
-      // Get Firebase token for authentication
-      const token = localStorage.getItem('firebaseToken');
-      if (!token) {
-        section.innerHTML = `
-          <div class="full-recipe-modal">
-            <div class="recipe-header">
-              <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
-            </div>
-            <div class="full-recipe-content">Please log in to view detailed recipes.</div>
-            <button id="back-to-ideas" class="back-button">← Back to ideas</button>
-          </div>
-        `;
-        return;
-      }
-      
-      const res = await fetch(`${getApiUrl()}/api/generate/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          prompt: `Generate detailed recipe for: ${idea.title}`,
-          portions: parseInt(portions),
-          mode: window.PageContext ? window.PageContext.getCurrentPageMode() : 'general',
-          isDetailedRecipe: true,
-          recipeIdea: {
-            emoji: idea.emoji,
-            title: idea.title,
-            desc: idea.desc
-          }
-        })
-      });
-      
-      if (!res.ok) throw new Error('Server error');
-      const data = await res.json();
-      
-      if (data.message && !/I cannot provide a full recipe|my purpose is to generate three/i.test(data.message)) {
-        // Get user allergies for display
-        const allergies = await getUserAllergies();
-        const allergyNote = formatAllergyNote(allergies);
-        const allergyHtml = allergyNote ? `<div class="allergy-note">${allergyNote}</div>` : '';
-        
-        // Create the recipe content
-        section.innerHTML = `
-          <div class="full-recipe-modal">
-            <div class="recipe-header">
-              <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
-              <button class="favorite-btn" id="favorite-recipe" aria-label="Add to favorites">
-                <span class="heart-icon">♡</span>
-              </button>
-            </div>
-            ${allergyHtml}
-            <div class="full-recipe-content">${data.message.replace(/\n/g, '<br>')}</div>
-            <button id="back-to-ideas" class="back-button">← Back to ideas</button>
-          </div>
-        `;
-        
-        // Save the recipe to the database with the already-generated content
-        let savedRecipeId = null;
-        try {
-          // Parse the recipe content into sections
-          const recipeContent = data.message;
-          
-          // Extract ingredients section
-          const ingredientsMatch = recipeContent.match(/ingredients:?([\s\S]*?)(?:instructions|directions|method|steps|preparation)/i);
-          const ingredients = ingredientsMatch ? ingredientsMatch[1].trim().split('\n')
-            .filter(line => line.trim().length > 0)
-            .map(line => {
-              const match = line.trim().match(/^[-*•]?\s*(?:(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?)?\s*(.+)$/);
-              if (match) {
-                return {
-                  quantity: match[1] || null,
-                  unit: match[2] || null,
-                  name: match[3].trim()
-                };
-              }
-              return { name: line.trim() };
-            }) : [];
-
-          // Extract instructions/steps section
-          const stepsMatch = recipeContent.match(/(?:instructions|directions|method|steps|preparation):?([\s\S]*?)(?:(?:tips|notes|variations):|$)/i);
-          const steps = stepsMatch ? stepsMatch[1].trim().split('\n')
-            .filter(line => line.trim().length > 0)
-            .map(line => line.trim().replace(/^[\d#*•.\-]+\s*/, '').trim()) : [];
-
-          // Extract tips section if it exists
-          const tipsMatch = recipeContent.match(/(?:tips|notes|variations):?([\s\S]*?)$/i);
-          const tips = tipsMatch ? tipsMatch[1].trim() : '';
-
-          // Get current page mode for saving
-          const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
-          
-          // Log the parsed data
-
-          
-          // Create the request body
-          const requestBody = {
-            title: `${idea.emoji} ${idea.title}`,
-            description: recipeContent,
-            ingredients: JSON.stringify(ingredients),
-            instructions: stepsMatch ? stepsMatch[1].trim() : '',
-            steps: JSON.stringify(steps),
-            portions: parseInt(localStorage.getItem('portions') || '4'),
-            mode: mode
-          };
-          
-
-          
-          const saveResponse = await fetch(`${getApiUrl()}/api/save-suggestion`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(requestBody)
-          });
-          
-          if (!saveResponse.ok) {
-            throw new Error('Failed to save recipe');
-          }
-
-          const saveResult = await saveResponse.json();
-          if (saveResult.success && saveResult.recipe_id) {
-            savedRecipeId = saveResult.recipe_id;
-          }
-        } catch (saveError) {
-          console.error('Failed to save recipe to database:', saveError);
-        }
-        
-        // Add event listener to the back button
-        document.getElementById('back-to-ideas').addEventListener('click', () => {
-          const originalText = section.getAttribute('data-original-text');
-          if (originalText) {
-            renderRecipes(originalText);
-            window.scrollTo(0, scrollPosition);
-          }
-        }, { once: true });
-        
-        // Add event listener to the favorite button
-        const favoriteBtn = document.getElementById('favorite-recipe');
-        if (favoriteBtn) {
-          favoriteBtn.addEventListener('click', async () => {
-            try {
-              // Disable button during request
-              favoriteBtn.disabled = true;
-              favoriteBtn.style.opacity = '0.6';
-
-              const isFavorited = favoriteBtn.classList.contains('favorited');
-              
-              if (isFavorited) {
-                // Remove from favorites
-
-
-                const response = await fetch(`/api/favorites/recipe/${savedRecipeId}`, {
-                  method: 'DELETE',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-
-                if (!response.ok) {
-                  throw new Error('Failed to remove from favorites');
-                }
-
-                // Update UI to show unfavorited state
-                const heartIcon = favoriteBtn.querySelector('.heart-icon');
-                heartIcon.textContent = '♡';
-                favoriteBtn.classList.remove('favorited');
-                favoriteBtn.setAttribute('aria-label', 'Add to favorites');
-
-                // Show feedback
-                const feedbackDiv = document.createElement('div');
-                feedbackDiv.className = 'favorite-feedback';
-                feedbackDiv.textContent = 'Removed from favorites!';
-                document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
-
-                // Remove feedback after a few seconds
-                setTimeout(() => {
-                  feedbackDiv.style.opacity = '0';
-                  setTimeout(() => feedbackDiv.remove(), 500);
-                }, 2000);
-              } else {
-                // Add to favorites
-                const recipeData = {
-                  emoji: idea.emoji,
-                  title: idea.title,
-                  description: idea.desc,
-                  fullRecipe: data.message,
-                  recipe_id: savedRecipeId
-                };
-                
-                const success = await addToFavorites(recipeData);
-                
-                if (success) {
-                  
-                  // Change the heart icon to show it's been favorited
-                  const heartIcon = favoriteBtn.querySelector('.heart-icon');
-                  heartIcon.textContent = '❤️';
-                  favoriteBtn.classList.add('favorited');
-                  favoriteBtn.setAttribute('aria-label', 'Remove from favorites');
-                  
-                  // Show feedback
-                  const feedbackDiv = document.createElement('div');
-                  feedbackDiv.className = 'favorite-feedback';
-                  feedbackDiv.textContent = 'Added to favorites!';
-                  document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
-                  
-                  // Remove feedback after a few seconds
-                  setTimeout(() => {
-                    feedbackDiv.style.opacity = '0';
-                    setTimeout(() => feedbackDiv.remove(), 500);
-                  }, 2000);
-                } else {
-                  throw new Error('Recipe already exists in favorites or failed to add');
-                }
-              }
-
-              // Re-enable button after operation completes
-              favoriteBtn.disabled = false;
-              favoriteBtn.style.opacity = '1';
-              
-            } catch (error) {
-              console.error('❌ Error managing favorites:', error);
-              
-              // Re-enable button on error
-              favoriteBtn.disabled = false;
-              favoriteBtn.style.opacity = '1';
-              
-              alert('Failed to update favorites. Please try again.');
-            }
-          });
-        }
-      } else {
-        section.innerHTML = `
-          <div class="full-recipe-modal">
-            <div class="recipe-header">
-              <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
-            </div>
-            <div class="full-recipe-error">Sorry, I couldn't create a detailed recipe. Please try another suggestion.</div>
-            <button id="back-to-ideas" class="back-button">← Back to ideas</button>
-          </div>
-        `;
-        
-        // Add event listener to the back button - use once:true to prevent multiple triggers
-        document.getElementById('back-to-ideas').addEventListener('click', () => {
-          const originalText = section.getAttribute('data-original-text');
-          if (originalText) {
-            renderRecipes(originalText);
-            // Restore scroll position
-            window.scrollTo(0, scrollPosition);
-          }
-        }, { once: true });
-      }
-    } catch (err) {
-      section.innerHTML = `
-        <div class="full-recipe-modal">
-          <div class="recipe-header">
-            <h2 class="recipe-title">${idea.emoji} ${idea.title}</h2>
-          </div>
-          <div class="full-recipe-error">Sorry, there was an error while creating this recipe. Please try again later.</div>
-          <button id="back-to-ideas" class="back-button">← Back to ideas</button>
-        </div>
-      `;
-      
-      // Add event listener to the back button - use once:true to prevent multiple triggers
-      document.getElementById('back-to-ideas').addEventListener('click', () => {
-        const originalText = section.getAttribute('data-original-text');
-        if (originalText) {
-          renderRecipes(originalText);
-          // Restore scroll position
-          window.scrollTo(0, scrollPosition);
-        }
-      }, { once: true });
-      
-      console.error('Full recipe fetch error:', err);
-    }
-  }
   // Only run options logic if on options page
   // (No options logic here)
 
