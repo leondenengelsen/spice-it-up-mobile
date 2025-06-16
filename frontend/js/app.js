@@ -84,6 +84,129 @@ function formatAllergyNote(allergies) {
   return `${displayAllergies} | allergy-friendly`;
 }
 
+/**
+ * Robust recipe idea parser that handles various AI response formats
+ * @param {string} ideaText - Raw idea text from AI
+ * @param {number} idx - Index for debugging
+ * @returns {Object} Parsed idea with emoji, title, desc
+ */
+function parseRecipeIdea(ideaText, idx = 0) {
+  // Clean up the input
+  const cleanText = ideaText.trim();
+  
+  // Default values
+  let emoji = '';
+  let title = '';
+  let desc = '';
+  
+  // Step 1: Extract emoji using centralized utility
+  emoji = window.EmojiUtils.extractEmoji(cleanText);
+  
+  // Step 2: Remove emoji and get remaining text using centralized pattern
+  const withoutEmoji = cleanText.replace(window.EmojiUtils.EMOJI_CONFIG.cleanTitlePattern, '').trim();
+  
+  // Step 3: Try multiple patterns to find title and description separator
+  const dashPatterns = [
+    /^(.*?)\s*[—–−]\s*(.*)$/,  // Em dash, en dash, minus
+    /^(.*?)\s*[-]\s*(.*)$/,     // Regular hyphen
+    /^(.*?)\s*[–]\s*(.*)$/,     // En dash specifically
+    /^(.*?)\s*[—]\s*(.*)$/,     // Em dash specifically
+    /^(.*?)\s*--\s*(.*)$/       // Double hyphen
+  ];
+  
+  let titleDescMatch = null;
+  for (const pattern of dashPatterns) {
+    titleDescMatch = withoutEmoji.match(pattern);
+    if (titleDescMatch) break;
+  }
+  
+  if (titleDescMatch) {
+    // Found title-desc separator
+    title = titleDescMatch[1].trim();
+    desc = titleDescMatch[2].trim();
+    
+    // Clean up title - remove bold markers if present
+    title = title.replace(/^\*\*(.*)\*\*$/, '$1').trim();
+    title = title.replace(/^\*(.*)\*$/, '$1').trim();
+    
+    // Handle multi-line descriptions - take only first line for card display
+    if (desc.includes('\n')) {
+      desc = desc.split('\n')[0].trim();
+    }
+  } else {
+    // No clear separator found - use fallback strategy
+    const lines = withoutEmoji.split('\n').filter(line => line.trim());
+    
+    if (lines.length >= 2) {
+      // Multi-line format: first line is title, rest is description
+      title = lines[0].trim();
+      desc = lines.slice(1).join(' ').trim();
+    } else if (lines.length === 1) {
+      // Single line - try to extract meaningful parts
+      const singleLine = lines[0].trim();
+      
+      // Try to find bold text as title
+      const boldMatch = singleLine.match(/\*\*(.*?)\*\*/);
+      if (boldMatch) {
+        title = boldMatch[1].trim();
+        desc = singleLine.replace(/\*\*.*?\*\*/, '').trim();
+        // Clean up description
+        desc = desc.replace(/^[—–−-]\s*/, '').trim();
+      } else {
+        // No bold text found - use first few words as title
+        const words = singleLine.split(' ');
+        if (words.length > 6) {
+          title = words.slice(0, 4).join(' ');
+          desc = words.slice(4).join(' ');
+        } else {
+          title = singleLine;
+          desc = 'Creative recipe variation';
+        }
+      }
+    } else {
+      // Fallback for empty or problematic content
+      title = `Recipe Idea ${idx + 1}`;
+      desc = 'Creative recipe variation';
+    }
+  }
+  
+  // Final cleanup and validation
+  title = title || `Recipe Idea ${idx + 1}`;
+  desc = desc || 'Creative recipe variation';
+  
+  // Limit lengths to prevent layout issues
+  if (title.length > 80) {
+    title = title.substring(0, 77) + '...';
+  }
+  if (desc.length > 200) {
+    desc = desc.substring(0, 197) + '...';
+  }
+  
+  // Remove any remaining markdown-style formatting
+  title = title.replace(/[*_`]/g, '').trim();
+  desc = desc.replace(/[*_`]/g, '').trim();
+  
+  return { emoji, title, desc };
+}
+
+// Make parseRecipeIdea available globally
+window.parseRecipeIdea = parseRecipeIdea;
+
+/**
+ * Escape HTML characters to prevent layout issues
+ * @param {string} text - Text to escape
+ * @returns {string} HTML-escaped text
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Make escapeHtml available globally
+window.escapeHtml = escapeHtml;
+
 // ========================
 // MAIN APP LOGIC
 // ========================
@@ -114,16 +237,12 @@ async function generateRecipes(showLoading = false) {
     console.log('Showing loading state');
     section.innerHTML = '<div class="full-recipe-loading">Loading ideas...</div>';
   }
-  
+
   try {
     // Get portions from localStorage
     const portions = localStorage.getItem('portions') || 4;
     console.log('Using portions:', portions);
-    
-    // Get current page mode (requires pageContext.js to be loaded)
-    const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
-    console.log('Current page mode:', mode);
-    
+
     // Get Firebase token for authentication
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
@@ -131,9 +250,14 @@ async function generateRecipes(showLoading = false) {
       showEmptyState('Please log in to generate recipes.');
       return;
     }
-    
-    console.log('Sending request to generate recipes...');
-    const res = await fetch(`${getApiUrl()}/api/generate`, {  // Removed trailing slash
+
+    // Get current page mode
+    const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
+    console.log('Using mode:', mode);
+
+    // Make the API call
+    console.log('Making API call to generate recipes...');
+    const res = await fetch(`${getApiUrl()}/api/generate/`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -142,38 +266,176 @@ async function generateRecipes(showLoading = false) {
       body: JSON.stringify({ 
         prompt,
         portions: parseInt(portions),
-        mode: mode
+        mode,
+        isDetailedRecipe: false
       })
     });
-    
+
     if (!res.ok) {
-      console.error('Server error:', res.status, res.statusText);
-      const errorText = await res.text();
-      console.error('Error response:', errorText);
+      console.error('API call failed:', res.status, res.statusText);
       throw new Error('Server error');
     }
-    
+
     const data = await res.json();
-    console.log('Received response from server:', data);
-    
+    console.log('📥 Received response from server:', data);
+    console.log('📝 Raw response text:', data.message);
+
     if (data.message) {
-      console.log('Rendering recipes');
-      renderRecipes(data.message);
-    } else if (data.response) {  // Handle alternative response format
-      console.log('Rendering recipes from response field');
-      renderRecipes(data.response);
+      // Clean up any leaked system instructions before parsing
+      let cleanedText = data.message
+        .replace(/INTERNAL GUIDANCE.*?RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?:/gs, '')
+        .replace(/ADVENTUROUSNESS SCALE.*?\n/g, '')
+        .replace(/INSPIRATION LEVEL:.*?\n/g, '')
+        .replace(/User adventurousness level:.*?\n/g, '')
+        .replace(/Adjust your suggestions accordingly:.*?\n/g, '')
+        .replace(/RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?\n/g, '')
+        .trim();
+      
+      console.log('🧹 Cleaned text:', cleanedText);
+      
+      // Split into ideas (each idea is separated by two newlines)
+      const ideas = cleanedText.trim().split(/\n\s*\n/).filter(Boolean);
+      console.log('📋 Found ideas:', ideas);
+      
+      try {
+        // Render the recipes
+        await renderRecipes(cleanedText);
+      } catch (renderError) {
+        console.error('❌ Error rendering recipes:', renderError);
+        console.error('Error details:', {
+          name: renderError.name,
+          message: renderError.message,
+          stack: renderError.stack,
+          ideas: ideas
+        });
+        showEmptyState('Error displaying recipes. Please try again.');
+      }
     } else {
-      console.log('No recipes in response');
-      showEmptyState('No recipes returned. Please try again.');
+      console.error('❌ Invalid response format:', data);
+      showEmptyState('Received invalid response from server. Please try again.');
     }
   } catch (error) {
-    console.error('Error generating recipes:', error);
-    showEmptyState('Error generating recipes. Please try again.');
+    console.error('❌ Error generating recipes:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    showEmptyState('Failed to generate recipes. Please try again.');
   }
 }
 
 // Make generateRecipes available globally
 window.generateRecipes = generateRecipes;
+
+// Function to handle empty state or errors
+function showEmptyState(message = 'No recipes to display.') {
+  const section = document.getElementById('recipes-section');
+  if (!section) {
+    console.error('No recipes section found for showEmptyState');
+    return;
+  }
+  section.innerHTML = `<div style="color: var(--color-error); text-align: center; margin-top: 2em;">${message}</div>`;
+  toggleInputContainer(true);
+  toggleRestartButton(false);
+  toggleHeadline(true);
+}
+
+// Render recipes (simple Markdown bold support)
+async function renderRecipes(text) {
+  const section = document.getElementById('recipes-section');
+  if (!section) {
+    console.error('No recipes section found for renderRecipes');
+    return;
+  }
+  section.innerHTML = '';
+  if (!text) {
+    showEmptyState('No recipes to display.');
+    return;
+  }
+  
+  // Clean up any leaked system instructions before parsing
+  let cleanedText = text
+    .replace(/INTERNAL GUIDANCE.*?RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?:/gs, '')
+    .replace(/ADVENTUROUSNESS SCALE.*?\n/g, '')
+    .replace(/INSPIRATION LEVEL:.*?\n/g, '')
+    .replace(/User adventurousness level:.*?\n/g, '')
+    .replace(/Adjust your suggestions accordingly:.*?\n/g, '')
+    .replace(/RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?\n/g, '')
+    .trim();
+  
+  // Ensure chili button is visible
+  toggleChiliButton(true);
+  
+  // Hide headline when showing recipes
+  toggleHeadline(false);
+  
+  // Hide input container and show restart button when displaying recipes
+  toggleInputContainer(false);
+  toggleRestartButton(true);
+  
+  // Store the original text for back button functionality
+  section.setAttribute('data-original-text', cleanedText);
+  
+  // Split into ideas (each idea is separated by two newlines)
+  const ideas = cleanedText.trim().split(/\n\s*\n/).filter(Boolean);
+  ideas.forEach((idea, idx) => {
+    const parsed = parseRecipeIdea(idea, idx);
+    const recipeBox = document.createElement('div');
+    recipeBox.className = 'recipe-idea-box';
+    recipeBox.onclick = () => handleRecipeClick(idx, parsed);
+    recipeBox.innerHTML = `
+      <div class="title-row">
+        <span class="recipe-emoji">${parsed.emoji}</span>
+        <span class="recipe-title"><b>${escapeHtml(parsed.title)}</b></span>
+      </div>
+      <div class="recipe-desc">${escapeHtml(parsed.desc)}</div>
+    `;
+    section.appendChild(recipeBox);
+  });
+}
+
+// Make functions available globally
+window.renderRecipes = renderRecipes;
+window.showEmptyState = showEmptyState;
+
+// Function to toggle chili button visibility
+function toggleChiliButton(show) {
+  const chiliWrap = document.getElementById('chili-wrap');
+  if (chiliWrap) {
+    chiliWrap.style.display = show ? 'flex' : 'none';
+  }
+}
+
+// Function to toggle headline visibility
+function toggleHeadline(show) {
+  const headline = document.getElementById('headline-section');
+  if (headline) {
+    headline.style.display = show ? 'block' : 'none';
+  }
+}
+
+// Function to toggle input container visibility
+function toggleInputContainer(show) {
+  const inputContainer = document.getElementById('input-container');
+  if (inputContainer) {
+    inputContainer.style.display = show ? 'block' : 'none';
+  }
+}
+
+// Function to toggle restart button visibility
+function toggleRestartButton(show) {
+  const restartBtn = document.getElementById('restart-btn');
+  if (restartBtn) {
+    restartBtn.style.display = show ? 'block' : 'none';
+  }
+}
+
+// Make toggle functions available globally
+window.toggleChiliButton = toggleChiliButton;
+window.toggleHeadline = toggleHeadline;
+window.toggleInputContainer = toggleInputContainer;
+window.toggleRestartButton = toggleRestartButton;
 
 document.addEventListener('DOMContentLoaded', () => {
   // Navigation
@@ -266,230 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.focus();
       }
     };
-  }
-
-  // Function to toggle chili button visibility
-  function toggleChiliButton(show) {
-    const chiliWrap = document.querySelector('.chili-wrap');
-    if (chiliWrap) {
-      chiliWrap.style.display = show ? 'flex' : 'none';
-    }
-  }
-  
-  // Function to toggle headline visibility
-  function toggleHeadline(show) {
-    const headline = document.getElementById('headline-section');
-    if (headline) {
-      headline.style.display = show ? 'block' : 'none';
-    }
-  }
-  
-  // Function to toggle input container visibility
-  function toggleInputContainer(show) {
-    const inputContainer = document.getElementById('input-container');
-    if (inputContainer) {
-      inputContainer.style.display = show ? 'block' : 'none';
-    }
-  }
-  
-  // Function to toggle restart button visibility
-  function toggleRestartButton(show) {
-    const restartBtn = document.getElementById('restart-btn');
-    if (restartBtn) {
-      restartBtn.style.display = show ? 'block' : 'none';
-    }
-  }
-
-  // Function to handle empty state or errors
-  function showEmptyState(message = 'No recipes to display.') {
-    const section = document.getElementById('recipes-section');
-    section.innerHTML = `<div style="color: var(--color-error); text-align: center; margin-top: 2em;">${message}</div>`;
-    toggleInputContainer(true);
-    toggleRestartButton(false);
-    toggleHeadline(true);
-  }
-
-  // Render recipes (simple Markdown bold support)
-  async function renderRecipes(text) {
-    const section = document.getElementById('recipes-section');
-    section.innerHTML = '';
-    if (!text) {
-      showEmptyState('No recipes to display.');
-      return;
-    }
-    
-    // Clean up any leaked system instructions before parsing
-    let cleanedText = text
-      .replace(/INTERNAL GUIDANCE.*?RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?:/gs, '')
-      .replace(/ADVENTUROUSNESS SCALE.*?\n/g, '')
-      .replace(/INSPIRATION LEVEL:.*?\n/g, '')
-      .replace(/User adventurousness level:.*?\n/g, '')
-      .replace(/Adjust your suggestions accordingly:.*?\n/g, '')
-      .replace(/RESPOND ONLY WITH THE 3 RECIPE IDEAS.*?\n/g, '')
-      .trim();
-    
-    // Ensure chili button is visible
-    toggleChiliButton(true);
-    
-    // Hide headline when showing recipes
-    toggleHeadline(false);
-    
-    // Hide input container and show restart button when displaying recipes
-    toggleInputContainer(false);
-    toggleRestartButton(true);
-    
-    // Store the original text for back button functionality
-    section.setAttribute('data-original-text', cleanedText);
-    
-    // Split into ideas (each idea is separated by two newlines)
-    const ideas = cleanedText.trim().split(/\n\s*\n/).filter(Boolean);
-    ideas.forEach((idea, idx) => {
-      const parsed = parseRecipeIdea(idea, idx);
-      
-      const box = document.createElement('div');
-      box.className = 'recipe-idea-box';
-      box.innerHTML = `
-        <div class="title-row">
-          <span class="recipe-emoji">${escapeHtml(parsed.emoji)}</span>
-          <span class="recipe-title"><b>${escapeHtml(parsed.title)}</b></span>
-        </div>
-        <div class="recipe-desc">${escapeHtml(parsed.desc)}</div>
-      `;
-      box.onclick = () => handleRecipeClick(idx, { emoji: parsed.emoji, title: parsed.title, desc: parsed.desc, raw: idea });
-      section.appendChild(box);
-    });
-
-    // Add allergy note after recipe ideas
-    try {
-      const allergies = await getUserAllergies();
-      const allergyNote = formatAllergyNote(allergies);
-      
-      if (allergyNote) {
-        const allergyDiv = document.createElement('div');
-        allergyDiv.className = 'allergy-note';
-        allergyDiv.textContent = allergyNote;
-        section.appendChild(allergyDiv);
-      }
-    } catch (error) {
-      console.error('Error adding allergy note:', error);
-    }
-  }
-
-  /**
-   * Robust recipe idea parser that handles various AI response formats
-   * @param {string} ideaText - Raw idea text from AI
-   * @param {number} idx - Index for debugging
-   * @returns {Object} Parsed idea with emoji, title, desc
-   */
-  function parseRecipeIdea(ideaText, idx = 0) {
-    // Clean up the input
-    const cleanText = ideaText.trim();
-    
-    // Default values
-    let emoji = '';
-    let title = '';
-    let desc = '';
-    
-    // Step 1: Extract emoji using centralized utility
-    emoji = window.EmojiUtils.extractEmoji(cleanText);
-    
-    // Step 2: Remove emoji and get remaining text using centralized pattern
-    const withoutEmoji = cleanText.replace(window.EmojiUtils.EMOJI_CONFIG.cleanTitlePattern, '').trim();
-    
-    // Step 3: Try multiple patterns to find title and description separator
-    const dashPatterns = [
-      /^(.*?)\s*[—–−]\s*(.*)$/,  // Em dash, en dash, minus
-      /^(.*?)\s*[-]\s*(.*)$/,     // Regular hyphen
-      /^(.*?)\s*[–]\s*(.*)$/,     // En dash specifically
-      /^(.*?)\s*[—]\s*(.*)$/,     // Em dash specifically
-      /^(.*?)\s*--\s*(.*)$/       // Double hyphen
-    ];
-    
-    let titleDescMatch = null;
-    for (const pattern of dashPatterns) {
-      titleDescMatch = withoutEmoji.match(pattern);
-      if (titleDescMatch) break;
-    }
-    
-    if (titleDescMatch) {
-      // Found title-desc separator
-      title = titleDescMatch[1].trim();
-      desc = titleDescMatch[2].trim();
-      
-      // Clean up title - remove bold markers if present
-      title = title.replace(/^\*\*(.*)\*\*$/, '$1').trim();
-      title = title.replace(/^\*(.*)\*$/, '$1').trim();
-      
-      // Handle multi-line descriptions - take only first line for card display
-      if (desc.includes('\n')) {
-        desc = desc.split('\n')[0].trim();
-      }
-    } else {
-      // No clear separator found - use fallback strategy
-      const lines = withoutEmoji.split('\n').filter(line => line.trim());
-      
-      if (lines.length >= 2) {
-        // Multi-line format: first line is title, rest is description
-        title = lines[0].trim();
-        desc = lines.slice(1).join(' ').trim();
-      } else if (lines.length === 1) {
-        // Single line - try to extract meaningful parts
-        const singleLine = lines[0].trim();
-        
-        // Try to find bold text as title
-        const boldMatch = singleLine.match(/\*\*(.*?)\*\*/);
-        if (boldMatch) {
-          title = boldMatch[1].trim();
-          desc = singleLine.replace(/\*\*.*?\*\*/, '').trim();
-          // Clean up description
-          desc = desc.replace(/^[—–−-]\s*/, '').trim();
-        } else {
-          // No bold text found - use first few words as title
-          const words = singleLine.split(' ');
-          if (words.length > 6) {
-            title = words.slice(0, 4).join(' ');
-            desc = words.slice(4).join(' ');
-          } else {
-            title = singleLine;
-            desc = 'Creative recipe variation';
-          }
-        }
-      } else {
-        // Fallback for empty or problematic content
-        title = `Recipe Idea ${idx + 1}`;
-        desc = 'Creative recipe variation';
-      }
-    }
-    
-    // Final cleanup and validation
-    title = title || `Recipe Idea ${idx + 1}`;
-    desc = desc || 'Creative recipe variation';
-    
-    // Limit lengths to prevent layout issues
-    if (title.length > 80) {
-      title = title.substring(0, 77) + '...';
-    }
-    if (desc.length > 200) {
-      desc = desc.substring(0, 197) + '...';
-    }
-    
-    // Remove any remaining markdown-style formatting
-    title = title.replace(/[*_`]/g, '').trim();
-    desc = desc.replace(/[*_`]/g, '').trim();
-    
-    return { emoji, title, desc };
-  }
-
-  /**
-   * Escape HTML characters to prevent layout issues
-   * @param {string} text - Text to escape
-   * @returns {string} HTML-escaped text
-   */
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   // Handle click on a recipe idea box
