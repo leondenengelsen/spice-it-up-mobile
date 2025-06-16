@@ -224,3 +224,65 @@ exports.saveSuggestion = async (req, res) => {
     });
   }
 };
+
+async function generateRecipe(req, res) {
+  const { prompt, portions, mode, isDetailedRecipe, recipeIdea } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Keep only essential logs for debugging production issues
+    console.log("🟢 Generating recipe for user:", userId);
+    console.log("🟢 Mode:", mode, "Detailed:", isDetailedRecipe);
+
+    // Get user preferences
+    const [userPreferences] = await db.query(
+      'SELECT allergies, adventurousness FROM user_options WHERE user_id = ?',
+      [userId]
+    );
+
+    const { allergies, adventurousness } = userPreferences[0] || {};
+
+    // Keep important preference logs for debugging
+    console.log("🎯 User preferences - Allergies:", allergies ? allergies.length : 0, "Adventurousness:", adventurousness);
+
+    // Construct system message
+    const systemMessage = constructSystemMessage(mode, isDetailedRecipe, allergies, adventurousness);
+    
+    // Remove verbose message construction logs
+    const fullPrompt = constructFullPrompt(prompt, systemMessage, portions, mode, isDetailedRecipe, recipeIdea);
+    const seed = Math.floor(Math.random() * 1000000);
+
+    // Keep API call logs for debugging
+    console.log("📤 Sending to Gemini - Prompt length:", fullPrompt.length);
+
+    let retryCount = 0;
+    const maxRetries = 3;
+    let responseText;
+
+    while (retryCount < maxRetries) {
+      try {
+        // ... existing code ...
+        console.log("✅ Gemini response received - Length:", responseText.length);
+        break;
+      } catch (apiError) {
+        retryCount++;
+        console.error("🔴 API error on attempt", retryCount, ":", apiError.message);
+        if (retryCount === maxRetries) throw apiError;
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+
+    // Store suggestions
+    try {
+      await storeRecipeSuggestions(responseText, userId, isDetailedRecipe);
+    } catch (dbError) {
+      console.error("⚠️ Failed to store suggestions:", dbError);
+      // Continue even if storage fails
+    }
+
+    res.json({ response: responseText });
+  } catch (error) {
+    console.error("❌ Recipe generation error:", error);
+    res.status(500).json({ error: 'Failed to generate recipe' });
+  }
+}

@@ -1,126 +1,70 @@
 const { verifyToken, isDevelopment, mockUser } = require('../utils/firebase');
 const db = require('../db'); // Assuming this is your database connection
+const admin = require('firebase-admin');
 
 const authController = {
   // Register a new user in our database
   async registerUser(req, res) {
-    const connection = await db.getConnection();
-    
     try {
-      console.log('\n📝 Starting user registration process');
-      console.log('Headers:', JSON.stringify(req.headers, null, 2));
-      console.log('Body:', JSON.stringify(req.body, null, 2));
-      
-      const { authorization } = req.headers;
-      if (!authorization) {
+      // Keep only essential auth logs
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
         console.error('❌ No authorization header provided');
         return res.status(401).json({ error: 'No authorization header' });
       }
-      
-      const token = authorization.split('Bearer ')[1];
+
+      const token = authHeader.split(' ')[1];
       if (!token) {
         console.error('❌ Invalid authorization format');
         return res.status(401).json({ error: 'Invalid authorization format' });
       }
-      
-      console.log('🔑 Verifying Firebase token...');
+
+      // Verify Firebase token
       let decodedToken;
       try {
-        decodedToken = await verifyToken(token);
-        console.log('✅ Firebase token verified:', { uid: decodedToken.uid, email: decodedToken.email });
+        decodedToken = await admin.auth().verifyIdToken(token);
+        console.log('✅ Firebase token verified for:', decodedToken.email);
       } catch (tokenError) {
-        console.error('❌ Token verification failed:', tokenError);
-        return res.status(401).json({ error: `Token verification failed: ${tokenError.message}` });
+        console.error('❌ Token verification failed:', tokenError.message);
+        return res.status(401).json({ error: 'Invalid token' });
       }
-      
-      const { username } = req.body;
-      const firebase_uid = decodedToken.uid;
-      const email = decodedToken.email;
-      
+
+      const { username, firebase_uid, email } = req.body;
       if (!username || !firebase_uid || !email) {
-        console.error('❌ Missing required fields:', { username, firebase_uid, email });
+        console.error('❌ Missing required fields');
         return res.status(400).json({ error: 'Missing required fields' });
       }
-      
-      console.log('📝 Processing registration:', { firebase_uid, email, username });
-      
-      // Start transaction
-      await connection.beginTransaction();
-      
-      // Check if user exists
-      console.log('🔍 Checking for existing user...');
-      const [existingUsers] = await connection.query(
-        'SELECT * FROM users WHERE firebase_uid = ? OR email = ? OR username = ?',
-        [firebase_uid, email, username]
+
+      // Check for existing user
+      const [existingUsers] = await db.query(
+        'SELECT * FROM users WHERE firebase_uid = ? OR email = ?',
+        [firebase_uid, email]
       );
-      
-      console.log('🔍 Existing users query result:', existingUsers.length > 0 
-        ? `Found ${existingUsers.length} user(s)` 
-        : 'No existing users found');
-      
+
       if (existingUsers.length > 0) {
         const existingUser = existingUsers[0];
-        console.log('👤 Found existing user:', {
-          id: existingUser.id,
-          firebase_uid: existingUser.firebase_uid,
-          email: existingUser.email,
-          username: existingUser.username
-        });
-        
-        if (existingUser.firebase_uid !== firebase_uid) {
-          await connection.rollback();
-          return res.status(409).json({ error: 'Email or username already in use' });
-        }
-        
-        // Update username if different
-        if (username && username !== existingUser.username) {
-          console.log('✏️ Updating username...');
-          await connection.query(
-            'UPDATE users SET username = ? WHERE firebase_uid = ?',
-            [username, firebase_uid]
+        if (existingUser.username !== username) {
+          // Update username if it changed
+          const [updatedUser] = await db.query(
+            'UPDATE users SET username = ? WHERE id = ?',
+            [username, existingUser.id]
           );
-          
-          const [updatedUser] = await connection.query(
-            'SELECT * FROM users WHERE firebase_uid = ?',
-            [firebase_uid]
-          );
-          
-          await connection.commit();
-          console.log('✅ Username updated:', updatedUser[0]);
-          return res.json(updatedUser[0]);
+          console.log('✅ Updated username for user:', existingUser.id);
         }
-        
-        await connection.commit();
-        return res.json(existingUser);
+        return res.json({ user: existingUser });
       }
-      
+
       // Create new user
-      console.log('👤 Creating new user...');
-      const [result] = await connection.query(
-        'INSERT INTO users (firebase_uid, email, username, created_at) VALUES (?, ?, ?, NOW())',
-        [firebase_uid, email, username]
+      const [newUser] = await db.query(
+        'INSERT INTO users (username, firebase_uid, email) VALUES (?, ?, ?)',
+        [username, firebase_uid, email]
       );
-      
-      // Get the created user
-      const [newUser] = await connection.query(
-        'SELECT * FROM users WHERE id = ?',
-        [result.insertId]
-      );
-      
-      await connection.commit();
-      console.log('✅ New user created successfully:', newUser[0]);
-      
-      res.status(201).json(newUser[0]);
-      
+      console.log('✅ Created new user:', newUser.insertId);
+
+      res.status(201).json({ user: { id: newUser.insertId, username, email } });
     } catch (error) {
       console.error('❌ Registration error:', error);
-      await connection.rollback();
-      res.status(500).json({ 
-        error: `Registration failed: ${error.message}`,
-        details: isDevelopment ? error.stack : undefined
-      });
-    } finally {
-      connection.release();
+      res.status(500).json({ error: 'Registration failed' });
     }
   },
 
@@ -220,93 +164,60 @@ const authController = {
   // Delete user from database
   async deleteUser(req, res) {
     try {
-      console.log('🔄 Starting user deletion process');
-      
-      const { authorization } = req.headers;
-      if (!authorization) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
         console.error('❌ No authorization header provided');
         return res.status(401).json({ error: 'No authorization header' });
       }
-      
-      const token = authorization.split('Bearer ')[1];
-      console.log('🔑 Got token:', token.substring(0, 20) + '...');
-      
-      // Verify Firebase token
-      console.log('🔄 Verifying Firebase token...');
-      const decodedToken = await verifyToken(token);
-      console.log('✅ Token verified for user:', decodedToken.email);
-      
-      const firebase_uid = decodedToken.uid;
-      console.log('👤 Firebase UID:', firebase_uid);
 
-      // Start a transaction
-      console.log('🔄 Starting database transaction');
+      const token = authHeader.split(' ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      const firebase_uid = decodedToken.uid;
+
+      // Start transaction
       const connection = await db.getConnection();
       await connection.beginTransaction();
 
       try {
-        // Get user ID first
-        console.log('🔍 Looking up user in database');
-        const [userRows] = await connection.query('SELECT id FROM users WHERE firebase_uid = ?', [firebase_uid]);
-        
-        if (userRows.length === 0) {
+        // Get user ID
+        const [users] = await connection.query(
+          'SELECT id FROM users WHERE firebase_uid = ?',
+          [firebase_uid]
+        );
+
+        if (users.length === 0) {
           console.error('❌ User not found in database');
           await connection.rollback();
-          connection.release();
-          return res.status(404).json({ error: 'User not found in database' });
+          return res.status(404).json({ error: 'User not found' });
         }
-        
-        const userId = userRows[0].id;
-        console.log('✅ Found user with ID:', userId);
 
-        // Delete user's favorites
-        console.log('🔄 Deleting user favorites');
+        const userId = users[0].id;
+        console.log('🔄 Deleting user data for ID:', userId);
+
+        // Delete user data
         await connection.query('DELETE FROM favorites WHERE user_id = ?', [userId]);
-        console.log('✅ Deleted user favorites');
-
-        // Delete user's options
-        console.log('🔄 Deleting user options');
-        await connection.query('DELETE FROM options WHERE user_id = ?', [userId]);
-        console.log('✅ Deleted user options');
-
-        // Delete user's recipe suggestions
-        console.log('🔄 Deleting user recipe suggestions');
+        await connection.query('DELETE FROM user_options WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM recipe_suggestions WHERE user_id = ?', [userId]);
-        console.log('✅ Deleted user recipe suggestions');
-
-        // Delete user's recipes
-        console.log('🔄 Deleting user recipes');
         await connection.query('DELETE FROM recipes WHERE user_id = ?', [userId]);
-        console.log('✅ Deleted user recipes');
+        await connection.query('DELETE FROM users WHERE id = ?', [userId]);
 
-        // Finally, delete the user
-        console.log('🔄 Deleting user account');
-        const [result] = await connection.query('DELETE FROM users WHERE id = ?', [userId]);
-        
-        if (result.affectedRows === 0) {
-          console.error('❌ Failed to delete user');
-          await connection.rollback();
-          connection.release();
-          return res.status(500).json({ error: 'Failed to delete user' });
-        }
-
-        // Commit the transaction
-        console.log('✅ All deletions successful, committing transaction');
         await connection.commit();
-        connection.release();
         console.log('✅ Successfully deleted user and all related data');
+
+        // Delete Firebase user
+        await admin.auth().deleteUser(firebase_uid);
         
-        res.json({ success: true });
-        
+        res.json({ message: 'User deleted successfully' });
       } catch (error) {
-        console.error('❌ Error during deletion transaction:', error);
         await connection.rollback();
-        connection.release();
+        console.error('❌ Error during deletion:', error);
         throw error;
+      } finally {
+        connection.release();
       }
     } catch (error) {
       console.error('❌ Error deleting user:', error);
-      res.status(500).json({ error: `Failed to delete user: ${error.message}` });
+      res.status(500).json({ error: 'Failed to delete user' });
     }
   },
   

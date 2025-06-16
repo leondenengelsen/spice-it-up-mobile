@@ -29,42 +29,25 @@ function showNotification(message, isError = false) {
 
 // Function to load options from database
 async function loadOptionsFromDatabase() {
-  console.log('🔄 [OPTIONS] Starting to load options from database');
-  console.log('📱 [OPTIONS] Is native app:', isNativeApp);
-  console.log('🔗 [OPTIONS] API URL:', getApiUrl());
-  console.log('🌐 [OPTIONS] Full API endpoint:', `${getApiUrl()}/api/options/`);
-  
   try {
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
-      console.log('❌ [OPTIONS] No authentication token found');
+      console.log('❌ No authentication token found');
       return false;
     }
-    console.log('✅ [OPTIONS] Found auth token:', token.substring(0, 10) + '...');
 
-    console.log('🔄 [OPTIONS] Making fetch request to:', `${getApiUrl()}/api/options/`);
     const response = await fetch(`${getApiUrl()}/api/options/`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
 
-    console.log('📡 [OPTIONS] Response status:', response.status);
-    console.log('📡 [OPTIONS] Response status text:', response.statusText);
-
     if (!response.ok) {
-      console.error('❌ [OPTIONS] Failed to fetch options:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('❌ [OPTIONS] Error response:', errorText);
+      console.error('❌ Failed to fetch options:', response.status);
       return false;
     }
 
     const options = await response.json();
-    console.log('✅ [OPTIONS] Successfully loaded options:', JSON.stringify(options, null, 2));
-    console.log('🔍 [OPTIONS] Has other_settings:', !!options.other_settings);
-    console.log('🔍 [OPTIONS] Has allergies:', !!(options.other_settings && options.other_settings.allergies));
-    console.log('🔍 [OPTIONS] Has root allergies:', !!options.allergies);
-    console.log('🔍 [OPTIONS] Current localStorage allergies:', localStorage.getItem('allergies'));
 
     // Update UI with database values
     const portionSlider = document.getElementById('portion-slider');
@@ -72,19 +55,14 @@ async function loadOptionsFromDatabase() {
     const adventureSlider = document.getElementById('adventure-slider');
     const adventureValue = document.getElementById('adventure-value');
     const allergySummary = document.getElementById('allergy-summary');
-
-    console.log('🔄 [OPTIONS] Updating UI with database values');
-    console.log('🔄 [OPTIONS] Current UI values - Portions:', portionSlider?.value, 'Adventure:', adventureSlider?.value);
     
     if (options.portions) {
-      console.log('📊 [OPTIONS] Setting portions to:', options.portions);
       portionSlider.value = options.portions;
       portionValue.textContent = options.portions;
       localStorage.setItem('portions', options.portions);
     }
 
     if (options.adventurousness) {
-      console.log('🎯 [OPTIONS] Setting adventurousness to:', options.adventurousness);
       adventureSlider.value = options.adventurousness;
       adventureValue.textContent = options.adventurousness;
       updateAdventureText(options.adventurousness);
@@ -93,18 +71,12 @@ async function loadOptionsFromDatabase() {
 
     // Handle allergies from either location
     const allergies = options.allergies || (options.other_settings && options.other_settings.allergies) || [];
-    console.log('⚠️ [OPTIONS] Setting allergies to:', allergies);
-    console.log('⚠️ [OPTIONS] Previous localStorage allergies:', localStorage.getItem('allergies'));
     localStorage.setItem('allergies', JSON.stringify(allergies));
-    console.log('⚠️ [OPTIONS] New localStorage allergies:', localStorage.getItem('allergies'));
     updateAllergySummary(allergies);
 
-    console.log('✅ [OPTIONS] Finished updating UI with database values');
-    console.log('✅ [OPTIONS] Final UI values - Portions:', portionSlider?.value, 'Adventure:', adventureSlider?.value);
     return true;
   } catch (error) {
-    console.error('❌ [OPTIONS] Error loading options:', error);
-    console.error('❌ [OPTIONS] Error stack:', error.stack);
+    console.error('❌ Error loading options:', error);
     return false;
   }
 }
@@ -128,78 +100,51 @@ let optionsDraft = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🔄 [OPTIONS] DOM Content Loaded event fired');
   try {
-    console.log('🔄 [OPTIONS] Starting initialization');
-    console.log('📱 [OPTIONS] Is native app:', isNativeApp);
-    console.log('🔗 [OPTIONS] API URL:', getApiUrl());
-    console.log('🔑 [OPTIONS] Firebase token exists:', !!localStorage.getItem('firebaseToken'));
-    
     const portionSlider = document.getElementById('portion-slider');
     const portionValue = document.getElementById('portion-value');
     const adventureSlider = document.getElementById('adventure-slider');
     const adventureValue = document.getElementById('adventure-value');
     
-    console.log('🔍 [OPTIONS] Found UI elements:', {
-      portionSlider: !!portionSlider,
-      portionValue: !!portionValue,
-      adventureSlider: !!adventureSlider,
-      adventureValue: !!adventureValue
-    });
-    
     // Initialize allergy modal
     const allergyModal = new AllergyModal();
     const editAllergiesBtn = document.getElementById('edit-allergies');
     const allergySummary = document.getElementById('allergy-summary');
+
+    // Load options from database
+    const databaseLoadSuccess = await loadOptionsFromDatabase();
     
-    console.log('🔍 [OPTIONS] Found allergy elements:', {
-      editAllergiesBtn: !!editAllergiesBtn,
-      allergySummary: !!allergySummary
-    });
-
-    console.log('🔄 [OPTIONS] Starting to load options from database');
-    try {
-      const databaseLoadSuccess = await loadOptionsFromDatabase();
-      console.log('✅ [OPTIONS] Database load result:', databaseLoadSuccess);
-      
-      // Only load from localStorage if database load failed
-      if (!databaseLoadSuccess) {
-        console.log('⚠️ [OPTIONS] Database load failed, using localStorage values');
-        // Fallback to localStorage if database values aren't available
-        const savedPortions = localStorage.getItem('portions');
-        if (savedPortions && !portionSlider.value) {
-          console.log('📊 [OPTIONS] Using localStorage fallback for portions:', savedPortions);
-          portionSlider.value = savedPortions;
-          portionValue.textContent = savedPortions;
-        }
-
-        const savedAdventure = localStorage.getItem('adventurousness');
-        if (savedAdventure && !adventureSlider.value) {
-          console.log('🎯 [OPTIONS] Using localStorage fallback for adventurousness:', savedAdventure);
-          adventureSlider.value = savedAdventure;
-          adventureValue.textContent = savedAdventure;
-          updateAdventureText(savedAdventure);
-        }
-
-        // Only load allergies from localStorage if we didn't get them from the database
-        const savedAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-        if (savedAllergies.length > 0) {
-          console.log('⚠️ [OPTIONS] Using localStorage fallback for allergies:', savedAllergies);
-          updateAllergySummary(savedAllergies);
-        }
+    // Only load from localStorage if database load failed
+    if (!databaseLoadSuccess) {
+      // Fallback to localStorage if database values aren't available
+      const savedPortions = localStorage.getItem('portions');
+      if (savedPortions && !portionSlider.value) {
+        portionSlider.value = savedPortions;
+        portionValue.textContent = savedPortions;
       }
 
-      // After loading options from DB, update optionsDraft
-      if (databaseLoadSuccess) {
-        optionsDraft.portions = parseInt(portionSlider.value);
-        optionsDraft.adventurousness = parseInt(adventureSlider.value);
-        optionsDraft.other_settings.allergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+      const savedAdventure = localStorage.getItem('adventurousness');
+      if (savedAdventure && !adventureSlider.value) {
+        adventureSlider.value = savedAdventure;
+        adventureValue.textContent = savedAdventure;
+        updateAdventureText(savedAdventure);
       }
-    } catch (error) {
-      console.error('❌ [OPTIONS] Error during initialization:', error);
-      console.error('❌ [OPTIONS] Error stack:', error.stack);
+
+      // Only load allergies from localStorage if we didn't get them from the database
+      const savedAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+      if (savedAllergies.length > 0) {
+        updateAllergySummary(savedAllergies);
+      }
     }
 
+    // After loading options from DB, update optionsDraft
+    if (databaseLoadSuccess) {
+      optionsDraft.portions = parseInt(portionSlider.value);
+      optionsDraft.adventurousness = parseInt(adventureSlider.value);
+      optionsDraft.other_settings.allergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+    }
+
+    // Set up event listeners
     portionSlider.oninput = () => {
       portionValue.textContent = portionSlider.value;
       localStorage.setItem('portions', portionSlider.value);
@@ -309,8 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       logoutBtn.onclick = handleLogout;
     }
   } catch (error) {
-    console.error('❌ [OPTIONS] Error during initialization:', error);
-    console.error('❌ [OPTIONS] Error stack:', error.stack);
+    console.error('❌ Error during initialization:', error);
   }
 });
 
