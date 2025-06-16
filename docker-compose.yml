@@ -27,6 +27,8 @@ services:
       - "8082:80"  # ✅ Changed to avoid conflict
     depends_on:
       - mysql
+    volumes:
+      - ./phpmyadmin-php.ini:/usr/local/etc/php/conf.d/phpmyadmin-php.ini
 
   backend:
     build: ./backend
