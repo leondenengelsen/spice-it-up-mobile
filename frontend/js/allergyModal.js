@@ -108,77 +108,14 @@ export class AllergyModal {
   }
 
   async save() {
+    const selectedAllergies = Array.from(this.selectedAllergies);
+    console.log('[AllergyModal] Save button pressed', selectedAllergies);
     try {
-      const allergies = Array.from(this.selectedAllergies);
-      
-      // Get current settings from localStorage
-      const currentSettings = {
-        portions: parseInt(localStorage.getItem('portions') || '4'),
-        adventurousness: parseInt(localStorage.getItem('adventurousness') || '1')
-      };
-
-      // Get Firebase token
-      const token = localStorage.getItem('firebaseToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Call the API to save options
-      const response = await fetch(`${getApiUrl()}/api/options`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          portions: currentSettings.portions,
-          adventurousness: currentSettings.adventurousness,
-          allergies: allergies  // Save at root level
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save allergies');
-      }
-
-      // Call the onSave callback with selected allergies
-      this.onSave(allergies);
-      
-      // Show success notification
-      Toastify({
-        text: "Allergy preferences saved ✅",
-        duration: 3000,
-        gravity: "bottom",
-        position: "center",
-        style: {
-          background: "var(--suggestion-bg)",
-          color: "var(--suggestion-text)"
-        }
-      }).showToast();
-
+      // Just call the onSave callback and close the modal
+      this.onSave(selectedAllergies);
       this.close();
     } catch (error) {
-      console.error('Error saving allergies:', error);
-      Toastify({
-        text: error.message === 'Not authenticated' 
-          ? "Please log in to save preferences" 
-          : "Failed to save allergies. Please try again.",
-        duration: 3000,
-        gravity: "bottom",
-        position: "center",
-        style: {
-          background: "#e74c3c",
-          color: "white"
-        }
-      }).showToast();
-
-      // If not authenticated, redirect to login
-      if (error.message === 'Not authenticated') {
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 2000);
-      }
+      console.error('Error in AllergyModal save callback:', error);
     }
   }
 

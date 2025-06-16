@@ -121,6 +121,12 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('❌ [OPTIONS] Error stack:', event.reason?.stack);
 });
 
+let optionsDraft = {
+  portions: 4,
+  adventurousness: 1,
+  other_settings: { allergies: [] }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🔄 [OPTIONS] DOM Content Loaded event fired');
   try {
@@ -182,6 +188,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           updateAllergySummary(savedAllergies);
         }
       }
+
+      // After loading options from DB, update optionsDraft
+      if (databaseLoadSuccess) {
+        optionsDraft.portions = parseInt(portionSlider.value);
+        optionsDraft.adventurousness = parseInt(adventureSlider.value);
+        optionsDraft.other_settings.allergies = JSON.parse(localStorage.getItem('allergies') || '[]');
+      }
     } catch (error) {
       console.error('❌ [OPTIONS] Error during initialization:', error);
       console.error('❌ [OPTIONS] Error stack:', error.stack);
@@ -190,12 +203,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     portionSlider.oninput = () => {
       portionValue.textContent = portionSlider.value;
       localStorage.setItem('portions', portionSlider.value);
+      optionsDraft.portions = parseInt(portionSlider.value);
     };
 
     adventureSlider.oninput = () => {
       adventureValue.textContent = adventureSlider.value;
       updateAdventureText(adventureSlider.value);
       localStorage.setItem('adventurousness', adventureSlider.value);
+      optionsDraft.adventurousness = parseInt(adventureSlider.value);
     };
 
     // Handle edit button click
@@ -205,6 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         allergyModal.init(currentAllergies, (updatedAllergies) => {
           localStorage.setItem('allergies', JSON.stringify(updatedAllergies));
           updateAllergySummary(updatedAllergies);
+          optionsDraft.other_settings.allergies = updatedAllergies;
         });
         allergyModal.show();
       };
@@ -213,8 +229,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('options-form').onsubmit = async (e) => {
       e.preventDefault();
       console.log('🔄 [OPTIONS] Form submitted');
-      
-      // Get Firebase token
       const token = localStorage.getItem('firebaseToken');
       if (!token) {
         console.log('❌ [OPTIONS] No auth token for form submission');
@@ -236,46 +250,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       try {
-        console.log('🔄 [OPTIONS] Saving portions and adventurousness to database');
+        console.log('🔄 [OPTIONS] Saving all options to database');
         console.log('🔗 [OPTIONS] Using API URL:', getApiUrl());
-        
-        // Save to localStorage
-        localStorage.setItem('portions', portionSlider.value);
-        localStorage.setItem('adventurousness', adventureSlider.value);
-        
-        // Get current allergies from localStorage to preserve them
-        const currentAllergies = JSON.parse(localStorage.getItem('allergies') || '[]');
-        console.log('📊 [OPTIONS] Preserving current allergies:', currentAllergies);
-        
+        // Send portions, adventurousness, and allergies in the PATCH request
         const requestBody = {
-          portions: parseInt(portionSlider.value),
-          adventurousness: parseInt(adventureSlider.value),
-          allergies: currentAllergies  // Save at root level
+          portions: optionsDraft.portions,
+          adventurousness: optionsDraft.adventurousness,
+          allergies: optionsDraft.other_settings.allergies
         };
-        console.log('📦 [OPTIONS] Request body:', JSON.stringify(requestBody, null, 2));
-        
+        console.log('📦 [OPTIONS] PATCH body:', JSON.stringify(requestBody, null, 2));
         const response = await fetch(`${getApiUrl()}/api/options`, {
-          method: 'POST',
-          headers: { 
+          method: 'PATCH',
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify(requestBody)
         });
-
         if (!response.ok) {
           const errorText = await response.text();
           console.error('❌ [OPTIONS] Failed to save settings:', response.status, response.statusText);
           console.error('❌ [OPTIONS] Error response:', errorText);
           throw new Error('Failed to save settings');
         }
-
         const responseData = await response.json();
         console.log('✅ [OPTIONS] Successfully saved settings:', responseData);
-        
-        // Show success notification
         Toastify({
-          text: "Portions and adventurousness saved ✅",
+          text: "All options saved ✅",
           duration: 3000,
           gravity: "bottom",
           position: "center",
@@ -284,15 +285,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             color: "var(--suggestion-text)"
           }
         }).showToast();
-
-        // Redirect after a short delay to allow the user to see the success message
         setTimeout(() => {
           window.location.href = '/index.html';
         }, 1000);
-        
       } catch (error) {
         console.error('❌ [OPTIONS] Error saving options:', error);
-        console.error('❌ [OPTIONS] Error stack:', error.stack);
         Toastify({
           text: "Failed to save settings. Please try again.",
           duration: 3000,
