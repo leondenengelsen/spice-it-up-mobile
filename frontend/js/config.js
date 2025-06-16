@@ -1,9 +1,9 @@
 // Configuration for different environments
 const config = {
-  // Development environment (local)
+  // Development environment (local Docker)
   development: {
     browser: 'http://localhost:3000',
-    mobile: 'http://192.168.0.211:3000'  // Your local network IP
+    mobile: 'http://192.168.0.211:3000'  // Your local network IP for mobile
   },
   // Production environment (your actual backend server)
   production: {
@@ -17,9 +17,9 @@ const isCapacitor = !!(window.Capacitor && (window.Capacitor.isNative || window.
 
 // Get the current environment
 const getCurrentEnvironment = () => {
-  // Always use production for now
-  console.log('🌐 Using production environment for all platforms');
-  return 'production';
+  // Use development environment for now since we're using Docker
+  console.log('🌐 Using development environment for all platforms');
+  return 'development';
 };
 
 // Export the configuration
