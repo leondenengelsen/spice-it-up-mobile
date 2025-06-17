@@ -17,9 +17,11 @@ const isCapacitor = !!(window.Capacitor && (window.Capacitor.isNative || window.
 
 // Get the current environment
 const getCurrentEnvironment = () => {
-  // Use development environment for now since we're using Docker
-  console.log('🌐 Using development environment for all platforms');
-  return 'development';
+  // Use production if on Netlify or a non-localhost domain
+  if (window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')) {
+    return 'development';
+  }
+  return 'production';
 };
 
 // Export the configuration
