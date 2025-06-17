@@ -6,6 +6,7 @@ import {
   sendEmailVerification,
   updateProfile
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { getApiUrl } from '../config.js';
 
 // Show/hide UI elements based on auth state
 function updateUI(isLoggedIn) {
@@ -59,19 +60,24 @@ async function handleSignup(email, password, username) {
     } catch (profileError) {
       console.error('❌ Error setting display name:', profileError);
     }
-    console.log('✅ Finished display name block, about to send verification email');
     
-    // After user creation, send verification email, fetch token, and setup options
+    // Send verification email
     try {
-      // 1. Send email verification
+      console.log('🔄 Sending verification email...');
       await sendEmailVerification(user);
       console.log('✅ Verification email sent successfully to:', email);
+    } catch (emailError) {
+      console.error('❌ Error sending verification email:', emailError);
+      throw emailError; // Re-throw to handle in main catch block
+    }
 
-      // 2. Fetch Firebase token
+    // Setup user options
+    try {
+      // Fetch Firebase token
       const token = await user.getIdToken();
       console.log('✅ Fetched Firebase token for options setup');
 
-      // 3. POST to backend to setup options
+      // POST to backend to setup options
       const response = await fetch(`${getApiUrl()}/api/options/setup`, {
         method: 'POST',
         headers: {
@@ -84,19 +90,24 @@ async function handleSignup(email, password, username) {
           allergies: []
         })
       });
+      
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error('Failed to setup options: ' + errorText);
+        console.error('❌ Failed to setup options:', errorText);
+      } else {
+        console.log('✅ Default options setup for new user');
       }
-      console.log('✅ Default options setup for new user');
     } catch (setupError) {
-      console.error('❌ Error during post-signup setup:', setupError);
+      console.error('❌ Error during options setup:', setupError);
+      // Don't throw here as this is not critical for signup
     }
     
     // Sign out the user until they verify their email
     await signOut(auth);
     showMessage('Account created! Please check your email to verify your account before logging in.');
-    return;
+    
+    // Redirect to verify email page
+    window.location.href = '/verify-email.html';
   } catch (error) {
     console.error('❌ Signup error:', error);
     showMessage(error.message, true);

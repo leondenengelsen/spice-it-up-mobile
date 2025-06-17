@@ -91,6 +91,32 @@ class AuthStateManager {
         console.error("Error verifying user in backend:", error);
       }
       
+      // Ensure default options are set for every user (only once per user)
+      const defaultOptionsKey = `defaultOptionsSet_${user.uid}`;
+      if (!localStorage.getItem(defaultOptionsKey)) {
+        try {
+          const response = await fetch(`${getApiUrl()}/api/options`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              portions: 4,
+              adventurousness: 1
+            })
+          });
+          if (response.ok) {
+            localStorage.setItem(defaultOptionsKey, 'true');
+            console.log('✅ Default options initialized');
+          } else {
+            console.error('❌ Failed to initialize default options:', await response.text());
+          }
+        } catch (err) {
+          console.error('❌ Error initializing default options:', err);
+        }
+      }
+      
       if (currentPath === this.pages.login || currentPath === this.pages.signup || currentPath === this.pages.verifyEmail) {
         // Redirect to main page if on auth pages
         window.location.href = this.pages.main;
@@ -127,16 +153,33 @@ class AuthStateManager {
   }
 
   async checkIfAdmin(token) {
+    if (!token) {
+      console.error('No token provided for admin check');
+      return false;
+    }
+
     try {
-      const response = await fetch(`${getApiUrl()}/api/auth/check-admin`, {
+      const apiUrl = `${getApiUrl()}/api/auth/check-admin`;
+      console.log('🔄 Checking admin status at:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Admin check failed:', response.status, errorText);
+        return false;
+      }
+
       const data = await response.json();
+      console.log('✅ Admin check result:', data);
       return data.isAdmin;
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('❌ Error checking admin status:', error);
+      // Don't throw the error, just return false for non-admin
       return false;
     }
   }

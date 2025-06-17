@@ -91,10 +91,25 @@ const authController = {
   // Check if user is admin
   async checkAdmin(req, res) {
     try {
-      res.json({ isAdmin: !!req.user.is_admin });
+      if (!req.user) {
+        console.error('❌ No user object in request');
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Log the check for debugging
+      console.log('🔄 Checking admin status for user:', {
+        id: req.user.id,
+        email: req.user.email,
+        is_admin: !!req.user.is_admin
+      });
+
+      res.json({ 
+        isAdmin: !!req.user.is_admin,
+        userId: req.user.id
+      });
     } catch (error) {
-      console.error('Error checking admin status:', error);
-      res.status(500).json({ error: 'Server error' });
+      console.error('❌ Error checking admin status:', error);
+      res.status(500).json({ error: 'Server error checking admin status' });
     }
   },
 
@@ -163,20 +178,24 @@ const authController = {
 
   // Delete user from database
   async deleteUser(req, res) {
+    console.log('🛑 Entered deleteUser endpoint');
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader) {
         console.error('❌ No authorization header provided');
         return res.status(401).json({ error: 'No authorization header' });
       }
+      console.log('🔑 Authorization header found');
 
       const token = authHeader.split(' ')[1];
       const decodedToken = await admin.auth().verifyIdToken(token);
       const firebase_uid = decodedToken.uid;
+      console.log('✅ Token verified for user:', firebase_uid);
 
       // Start transaction
       const connection = await db.getConnection();
       await connection.beginTransaction();
+      console.log('🔄 Began DB transaction');
 
       try {
         // Get user ID
@@ -184,6 +203,7 @@ const authController = {
           'SELECT id FROM users WHERE firebase_uid = ?',
           [firebase_uid]
         );
+        console.log('🔍 User lookup result:', users);
 
         if (users.length === 0) {
           console.error('❌ User not found in database');
@@ -206,6 +226,7 @@ const authController = {
 
         // Delete Firebase user
         await admin.auth().deleteUser(firebase_uid);
+        console.log('✅ Firebase user deleted');
         
         res.json({ message: 'User deleted successfully' });
       } catch (error) {
@@ -214,6 +235,7 @@ const authController = {
         throw error;
       } finally {
         connection.release();
+        console.log('🔓 DB connection released');
       }
     } catch (error) {
       console.error('❌ Error deleting user:', error);

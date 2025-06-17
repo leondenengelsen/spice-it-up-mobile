@@ -113,7 +113,8 @@
                         // Get fresh token for database deletion
                         const idToken = await user.getIdToken(true);
                         
-                        // Delete from database first
+                        // 1. Delete from backend first
+                        console.log('🔄 Sending delete request to backend...');
                         const response = await fetch('/api/auth/delete-user', {
                             method: 'DELETE',
                             headers: {
@@ -124,11 +125,14 @@
                         // Get the detailed error message if the request failed
                         if (!response.ok) {
                             const errorData = await response.json();
+                            console.error('❌ Backend deletion failed:', errorData.error || 'Unknown error');
                             throw new Error(errorData.error || 'Failed to delete user from database');
                         }
+                        console.log('✅ User deleted from backend, now deleting from Firebase...');
                         
-                        // Then delete from Firebase
+                        // 2. Then delete from Firebase
                         await deleteUser(user);
+                        console.log('✅ User deleted from Firebase');
                         
                         // Clear any stored data
                         localStorage.removeItem('firebaseToken');
