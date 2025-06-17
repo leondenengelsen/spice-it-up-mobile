@@ -214,9 +214,9 @@ const authController = {
         const userId = users[0].id;
         console.log('🔄 Deleting user data for ID:', userId);
 
-        // Delete user data
+        // Delete all related data
         await connection.query('DELETE FROM favorites WHERE user_id = ?', [userId]);
-        await connection.query('DELETE FROM user_options WHERE user_id = ?', [userId]);
+        await connection.query('DELETE FROM options WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM recipe_suggestions WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM recipes WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM users WHERE id = ?', [userId]);
