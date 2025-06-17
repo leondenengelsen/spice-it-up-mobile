@@ -3,6 +3,7 @@
 // Import favorites functions
 import { addToFavorites, getCurrentUser } from './favorites.js';
 import { getApiUrl } from './config.js';
+import { extractEmoji, cleanTitle, processRecipeDisplay, EMOJI_CONFIG } from './emojiUtils.js';
 
 // ========================
 // UTILITY FUNCTIONS
@@ -100,10 +101,10 @@ function parseRecipeIdea(ideaText, idx = 0) {
   let desc = '';
   
   // Step 1: Extract emoji using centralized utility
-  emoji = window.EmojiUtils.extractEmoji(cleanText);
+  emoji = extractEmoji(cleanText);
   
   // Step 2: Remove emoji and get remaining text using centralized pattern
-  const withoutEmoji = cleanText.replace(window.EmojiUtils.EMOJI_CONFIG.cleanTitlePattern, '').trim();
+  const withoutEmoji = cleanText.replace(EMOJI_CONFIG.cleanTitlePattern, '').trim();
   
   // Step 3: Try multiple patterns to find title and description separator
   const dashPatterns = [
@@ -835,4 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // TODO: Wire up favorites and login if needed
 });
+
+export { handleRecipeClick, escapeHtml, parseRecipeIdea, renderRecipes, showEmptyState, toggleChiliButton, toggleHeadline, toggleInputContainer, toggleRestartButton, generateRecipes };
 

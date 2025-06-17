@@ -190,6 +190,4 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = InputValidator;
 }
 
-// Global access
-window.InputValidator = InputValidator;
-window.recipeInputValidator = recipeInputValidator;
+export { InputValidator, recipeInputValidator };

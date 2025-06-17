@@ -54,10 +54,4 @@ function processRecipeDisplay(recipe) {
   };
 }
 
-// Export for use in other modules
-window.EmojiUtils = {
-  extractEmoji,
-  cleanTitle,
-  processRecipeDisplay,
-  EMOJI_CONFIG
-}; 
+export { extractEmoji, cleanTitle, processRecipeDisplay, EMOJI_CONFIG }; 

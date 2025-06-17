@@ -54,31 +54,49 @@ async function handleSignup(email, password, username) {
     console.log('🔄 Setting display name:', username);
     try {
       localStorage.setItem('user_display_name', username);
-      await updateProfile(auth.currentUser, { displayName: username });
-      await auth.currentUser.reload();
+      await updateProfile(user, { displayName: username });
+      await user.reload();
     } catch (profileError) {
       console.error('❌ Error setting display name:', profileError);
     }
+    console.log('✅ Finished display name block, about to send verification email');
     
-    // Send verification email
+    // After user creation, send verification email, fetch token, and setup options
     try {
-      console.log('🔄 Sending verification email...');
-      await sendEmailVerification(user, {
-        url: window.location.origin + '/index.html',
-        handleCodeInApp: false
-      });
+      // 1. Send email verification
+      await sendEmailVerification(user);
       console.log('✅ Verification email sent successfully to:', email);
-      
-      // Sign out the user until they verify their email
-      await signOut(auth);
-      showMessage('Account created! Please check your email to verify your account before logging in.');
-      return;
-    } catch (verificationError) {
-      console.error('❌ Error sending verification email:', verificationError);
-      showMessage('Account created, but there was an issue sending the verification email. Please check your spam folder or try again later.');
-      await signOut(auth);
-      return;
+
+      // 2. Fetch Firebase token
+      const token = await user.getIdToken();
+      console.log('✅ Fetched Firebase token for options setup');
+
+      // 3. POST to backend to setup options
+      const response = await fetch(`${getApiUrl()}/api/options/setup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          portions: 1,
+          adventure: 2,
+          allergies: []
+        })
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error('Failed to setup options: ' + errorText);
+      }
+      console.log('✅ Default options setup for new user');
+    } catch (setupError) {
+      console.error('❌ Error during post-signup setup:', setupError);
     }
+    
+    // Sign out the user until they verify their email
+    await signOut(auth);
+    showMessage('Account created! Please check your email to verify your account before logging in.');
+    return;
   } catch (error) {
     console.error('❌ Signup error:', error);
     showMessage(error.message, true);

@@ -1,3 +1,6 @@
+import { generateRecipes } from './app.js';
+import { recipeInputValidator } from './inputValidator.js';
+
 class InterfaceManager {
     constructor() {
         this.talkBtn = document.getElementById('talk-btn');
@@ -71,14 +74,12 @@ class InterfaceManager {
             if (inputField && inputField.value.trim()) {
                 console.log('Handling short press - generating recipes');
                 // Check input validation before proceeding
-                if (window.recipeInputValidator && !window.recipeInputValidator.isValid()) {
-                    window.recipeInputValidator.showToast();
+                if (recipeInputValidator && !recipeInputValidator.isValid()) {
+                    recipeInputValidator.showToast();
                     return;
                 }
-                // Call generateRecipes directly if it exists
-                if (typeof window.generateRecipes === 'function') {
-                    window.generateRecipes(true);
-                }
+                // Call generateRecipes directly
+                generateRecipes(true);
             }
         }
         
@@ -116,5 +117,5 @@ class InterfaceManager {
 
 // Initialize the interface manager when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.interfaceManager = new InterfaceManager();
+    new InterfaceManager();
 }); 

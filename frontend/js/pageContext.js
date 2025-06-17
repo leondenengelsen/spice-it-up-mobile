@@ -100,9 +100,4 @@ document.addEventListener('DOMContentLoaded', function() {
   updatePageUI();
 });
 
-// Export functions for use in other modules
-window.PageContext = {
-  getCurrentPageMode,
-  getModeMessages,
-  updatePageUI
-};
+export { getCurrentPageMode, getModeMessages, updatePageUI };

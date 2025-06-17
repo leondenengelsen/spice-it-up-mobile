@@ -253,6 +253,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
       logoutBtn.onclick = handleLogout;
     }
+
+    // Add event listener for adventure-slider input
+    if (adventureSlider) {
+      adventureSlider.addEventListener('input', (e) => updateAdventureText(e.target.value));
+    }
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }

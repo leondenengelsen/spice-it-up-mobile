@@ -5,6 +5,7 @@
 import { auth } from './firebase/init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from './config.js';
+import { processRecipeDisplay } from './emojiUtils.js';
 
 // Global variables for authenticated user state
 let currentUserId = null;
@@ -90,7 +91,7 @@ function formatAllergyNote(allergies) {
 }
 
 // Export only the functions needed by other modules
-export { addToFavorites, getCurrentUser };
+export { addToFavorites, getCurrentUser, showFullRecipe, backToFavorites, removeFavorite };
 
 // Make functions available on window for HTML onclick handlers
 window.showFullRecipe = showFullRecipe;
@@ -247,7 +248,7 @@ function renderFavorites(favorites) {
   
   favoritesGrid.innerHTML = favorites.map((favorite, index) => {
     // Process recipe title for display using frontend utilities
-    const displayData = window.EmojiUtils.processRecipeDisplay(favorite);
+    const displayData = processRecipeDisplay(favorite);
     const { emoji, cleanTitle } = displayData;
     const { recipe_id } = favorite;
     
@@ -391,7 +392,7 @@ async function showFullRecipe(recipeId) {
     const allergyHtml = allergyNote ? `<div class="allergy-note">${allergyNote}</div>` : '';
     
     // Process recipe title for display
-    const displayData = window.EmojiUtils.processRecipeDisplay(recipe);
+    const displayData = processRecipeDisplay(recipe);
     const { emoji, cleanTitle } = displayData;
     
     // Create the recipe content
