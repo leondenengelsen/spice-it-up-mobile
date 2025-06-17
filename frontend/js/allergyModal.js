@@ -109,13 +109,15 @@ export class AllergyModal {
 
   async save() {
     const selectedAllergies = Array.from(this.selectedAllergies);
-    console.log('[AllergyModal] Save button pressed', selectedAllergies);
+    // Commented out for production:
+    // console.log('[AllergyModal] Save button pressed', selectedAllergies);
     try {
       // Just call the onSave callback and close the modal
       this.onSave(selectedAllergies);
       this.close();
     } catch (error) {
-      console.error('Error in AllergyModal save callback:', error);
+      // Commented out for production:
+      // console.error('Error in AllergyModal save callback:', error);
     }
   }
 

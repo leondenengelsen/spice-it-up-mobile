@@ -99,7 +99,7 @@ class SpeechRecorder {
 
     stopRecording() {
         if (!this.isRecording) {
-            console.log('Not recording, ignoring stop request');
+            // console.log('Not recording, ignoring stop request');
             return;
         }
 
@@ -111,10 +111,10 @@ class SpeechRecorder {
         }
 
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            console.log('Stopping MediaRecorder...');
+            // console.log('Stopping MediaRecorder...');
             this.mediaRecorder.stop();
         } else {
-            console.log('MediaRecorder not active, nothing to stop');
+            // console.log('MediaRecorder not active, nothing to stop');
         }
 
         this.isRecording = false;

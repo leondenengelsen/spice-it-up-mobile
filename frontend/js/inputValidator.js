@@ -25,7 +25,8 @@ class InputValidator {
   setupValidation() {
     const inputField = document.querySelector(this.inputSelector);
     if (!inputField) {
-      console.warn(`InputValidator: Input field with selector "${this.inputSelector}" not found`);
+      // Commented out for production:
+      // console.warn(`InputValidator: Input field with selector "${this.inputSelector}" not found`);
       return;
     }
 

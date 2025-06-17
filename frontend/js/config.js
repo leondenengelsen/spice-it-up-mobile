@@ -27,7 +27,8 @@ export const getApiUrl = () => {
   const env = getCurrentEnvironment();
   const platform = isCapacitor ? 'mobile' : 'browser';
   const url = config[env][platform];
-  console.log(`🔗 Using API URL: ${url} (env: ${env}, platform: ${platform})`);
+  // Commented out for production:
+  // console.log(`🔗 Using API URL: ${url} (env: ${env}, platform: ${platform})`);
   return url;
 };
 

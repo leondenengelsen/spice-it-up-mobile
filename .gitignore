@@ -1,23 +1,41 @@
 # Node dependencies
 node_modules/
+backend/node_modules/
 
 # System files
 .DS_Store
 
 # Environment variables and secrets
 .env
+.env.*
 OPENAI_API_KEY
 GEMINI_API_KEY
+secrets/
+**/secrets/
+gen-lang-client-*.json
 
 # Build output
 dist/
+build/
+android/app/build/
+ios/build/
+frontend/dist/
+frontend/build/
+
+# Capacitor/Native
+android/.gradle/
+android/.idea/
+android/local.properties
+android/.cxx/
+android/capacitor-cordova-android-plugins/
+ios/Pods/
+ios/Podfile.lock
+ios/Podfile
+ios/Runner.xcworkspace/
+ios/DerivedData/
 
 # Logs
 *.log
-
-# 🔐 Service account key (Google Cloud)
-secrets/service-account.json
-gen-lang-client-*.json
 
 # Optional cache/temp files
 *.cache
@@ -29,6 +47,7 @@ gen-lang-client-*.json
 
 # Editor and workspace settings
 *.code-workspace
+.vscode/
 
 # Development and test scripts
 start-dev.sh

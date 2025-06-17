@@ -34,11 +34,12 @@ class AuthStateManager {
       //   return;
       // }
       // User is signed in
-      console.log('👤 Auth state changed - User signed in:', {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName
-      });
+      // Commented out for production:
+      // console.log('👤 Auth state changed - User signed in:', {
+      //   uid: user.uid,
+      //   email: user.email,
+      //   displayName: user.displayName
+      // });
       
       // Get token
       const token = await user.getIdToken();
@@ -50,13 +51,15 @@ class AuthStateManager {
       // If Firebase displayName is empty, try to get from localStorage
       if (!username || username.trim() === '') {
         username = localStorage.getItem('user_display_name');
-        console.log('📋 Using username from localStorage:', username);
+        // Commented out for production:
+        // console.log('📋 Using username from localStorage:', username);
       }
       
       // If still empty, fall back to email username part
       if (!username || username.trim() === '') {
         username = user.email.split('@')[0];
-        console.log('📧 Falling back to email username:', username);
+        // Commented out for production:
+        // console.log('📧 Falling back to email username:', username);
       }
       
       // Set a global variable for username
@@ -64,11 +67,12 @@ class AuthStateManager {
       
       // Save/verify user in our backend
       try {
-        console.log('🔄 Saving/verifying user in backend:', { 
-          uid: user.uid, 
-          email: user.email,
-          username: username
-        });
+        // Commented out for production:
+        // console.log('🔄 Saving/verifying user in backend:', { 
+        //   uid: user.uid, 
+        //   email: user.email,
+        //   username: username
+        // });
         
         const response = await fetch(`${getApiUrl()}/api/users`, {
           method: "POST",
@@ -86,15 +90,18 @@ class AuthStateManager {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            console.log("User verified in backend:", data);
+            // Commented out for production:
+            // console.log("User verified in backend:", data);
             window.dbUserId = data.userId;
             localStorage.setItem('dbUserId', data.userId);
           }
         } else {
-          console.error("Failed to verify user in backend:", await response.text());
+          // Commented out for production:
+          // console.error("Failed to verify user in backend:", await response.text());
         }
       } catch (error) {
-        console.error("Error verifying user in backend:", error);
+        // Commented out for production:
+        // console.error("Error verifying user in backend:", error);
       }
       
       // Ensure default options are set for every user (only once per user)
@@ -114,12 +121,15 @@ class AuthStateManager {
           });
           if (response.ok) {
             localStorage.setItem(defaultOptionsKey, 'true');
-            console.log('✅ Default options initialized');
+            // Commented out for production:
+            // console.log('✅ Default options initialized');
           } else {
-            console.error('❌ Failed to initialize default options:', await response.text());
+            // Commented out for production:
+            // console.error('❌ Failed to initialize default options:', await response.text());
           }
         } catch (err) {
-          console.error('❌ Error initializing default options:', err);
+          // Commented out for production:
+          // console.error('❌ Error initializing default options:', err);
         }
       }
       
@@ -160,13 +170,15 @@ class AuthStateManager {
 
   async checkIfAdmin(token) {
     if (!token) {
-      console.error('No token provided for admin check');
+      // Commented out for production:
+      // console.error('No token provided for admin check');
       return false;
     }
 
     try {
       const apiUrl = `${getApiUrl()}/api/auth/check-admin`;
-      console.log('🔄 Checking admin status at:', apiUrl);
+      // Commented out for production:
+      // console.log('🔄 Checking admin status at:', apiUrl);
       
       const response = await fetch(apiUrl, {
         headers: {
@@ -176,15 +188,18 @@ class AuthStateManager {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Admin check failed:', response.status, errorText);
+        // Commented out for production:
+        // console.error('❌ Admin check failed:', response.status, errorText);
         return false;
       }
 
       const data = await response.json();
-      console.log('✅ Admin check result:', data);
+      // Commented out for production:
+      // console.log('✅ Admin check result:', data);
       return data.isAdmin;
     } catch (error) {
-      console.error('❌ Error checking admin status:', error);
+      // Commented out for production:
+      // console.error('❌ Error checking admin status:', error);
       // Don't throw the error, just return false for non-admin
       return false;
     }

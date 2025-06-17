@@ -1,11 +1,13 @@
-console.log('🔄 [OPTIONS] Script starting to load - BEFORE IMPORTS');
+// Commented out for production:
+// console.log('🔄 [OPTIONS] Script starting to load - BEFORE IMPORTS');
 
 // Logic for the options page
 import { handleLogout } from './firebase/auth.js';
 import { AllergyModal } from './allergyModal.js';
 import { getApiUrl, isNativeApp } from './config.js';
 
-console.log('🔄 [OPTIONS] Script loaded - AFTER IMPORTS');
+// Commented out for production:
+// console.log('🔄 [OPTIONS] Script loaded - AFTER IMPORTS');
 
 // Helper function to show notifications
 function showNotification(message, isError = false) {
