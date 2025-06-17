@@ -59,6 +59,7 @@
             EmailAuthProvider,
             onAuthStateChanged
         } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getApiUrl } from './js/config.js';
 
         // Initialize auth state listener
         onAuthStateChanged(auth, (user) => {
@@ -115,7 +116,7 @@
                         
                         // 1. Delete from backend first
                         console.log('🔄 Sending delete request to backend...');
-                        const response = await fetch('/api/auth/delete-user', {
+                        const response = await fetch(`${getApiUrl()}/api/auth/delete-user`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${idToken}`
