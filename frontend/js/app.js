@@ -4,6 +4,7 @@
 import { addToFavorites, getCurrentUser } from './favorites.js';
 import { getApiUrl } from './config.js';
 import { extractEmoji, cleanTitle, processRecipeDisplay, EMOJI_CONFIG } from './emojiUtils.js';
+import { getCurrentPageMode } from './pageContext.js';
 
 // ========================
 // UTILITY FUNCTIONS
@@ -253,7 +254,7 @@ async function generateRecipes(showLoading = false) {
     }
 
     // Get current page mode
-    const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
+    const mode = getCurrentPageMode();
     console.log('Using mode:', mode);
 
     // Make the API call
@@ -487,7 +488,7 @@ async function handleRecipeClick(idx, idea) {
       body: JSON.stringify({ 
         prompt: `Generate detailed recipe for: ${idea.title}`,
         portions: parseInt(portions),
-        mode: window.PageContext ? window.PageContext.getCurrentPageMode() : 'general',
+        mode: getCurrentPageMode(),
         isDetailedRecipe: true,
         recipeIdea: {
           emoji: idea.emoji,
@@ -554,7 +555,7 @@ async function handleRecipeClick(idx, idea) {
         const tips = tipsMatch ? tipsMatch[1].trim() : '';
 
         // Get current page mode for saving
-        const mode = window.PageContext ? window.PageContext.getCurrentPageMode() : 'general';
+        const mode = getCurrentPageMode();
         
         // Create the request body
         const requestBody = {
