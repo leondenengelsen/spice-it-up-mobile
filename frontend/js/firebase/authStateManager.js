@@ -27,6 +27,12 @@ class AuthStateManager {
     const currentPath = window.location.pathname;
     
     if (user) {
+      // Block unverified users
+      // if (!user.emailVerified) {
+      //   console.warn('User email not verified. Redirecting to verify-email page.');
+      //   window.location.href = this.pages.verifyEmail;
+      //   return;
+      // }
       // User is signed in
       console.log('👤 Auth state changed - User signed in:', {
         uid: user.uid,
