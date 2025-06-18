@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "dev:docker": "./start-dev.sh"
   },
   "dependencies": {
     "@google-cloud/speech": "^7.1.0",

@@ -8,6 +8,7 @@ backend/node_modules/
 # Environment variables and secrets
 .env
 .env.*
+.local.env
 OPENAI_API_KEY
 GEMINI_API_KEY
 secrets/
