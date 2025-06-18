@@ -1,5 +1,6 @@
 // Import getApiUrl from config
 import { getApiUrl } from './config.js';
+import { Permissions } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@5.0.6/dist/esm/index.js';
 
 class SpeechRecorder {
     constructor() {
@@ -34,6 +35,14 @@ class SpeechRecorder {
         console.log('Starting recording...');
         
         try {
+            // Request microphone permission if running in Capacitor/native
+            if (window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform !== 'web')) {
+                const status = await Permissions.request({ name: 'microphone' });
+                if (status.state !== 'granted') {
+                    alert('Microphone permission is required for this feature. Please enable it in your device settings.');
+                    return;
+                }
+            }
             // Request microphone permission and get stream
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
