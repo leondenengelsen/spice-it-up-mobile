@@ -5,6 +5,8 @@ const admin = require('firebase-admin');
 const authController = {
   // Register a new user in our database
   async registerUser(req, res) {
+    // 🚫 Registration is temporarily disabled
+    return res.status(403).json({ error: 'Registration is temporarily disabled. Please try again later.' });
     try {
       // Keep only essential auth logs
       const authHeader = req.headers.authorization;
