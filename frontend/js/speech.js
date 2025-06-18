@@ -101,7 +101,7 @@ class SpeechRecorder {
             }, this.maxRecordingTime);
 
         } catch (error) {
-            console.error('[SpeechRecorder] Error starting recording:', error);
+            console.error('[SpeechRecorder] Error starting recording:', error, error.name, error.message);
             this.isRecording = false;
             this.hasPermission = false;
             // Show error to user
