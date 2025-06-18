@@ -269,7 +269,10 @@ function showError(message) {
 
 function renderFavorites(favorites) {
   const favoritesGrid = document.getElementById('favorites-grid');
-  
+  if (!favoritesGrid) {
+    console.error('[favorites.js] Could not find #favorites-grid in DOM!');
+    return;
+  }
   favoritesGrid.innerHTML = favorites.map((favorite, index) => {
     // Process recipe title for display using frontend utilities
     const displayData = processRecipeDisplay(favorite);
