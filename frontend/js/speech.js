@@ -1,4 +1,6 @@
 console.log('[SpeechRecorder] speech.js script tag executed!');
+// import { getApiUrl } from './config.js';
+// import { Permissions } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@5.0.6/dist/esm/index.js';
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[SpeechRecorder] DOMContentLoaded fired!');
     window.speechRecorder = new SpeechRecorder();
@@ -9,10 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[SpeechRecorder] startRecording event RECEIVED');
     });
 });
-
-// Import getApiUrl from config
-import { getApiUrl } from './config.js';
-import { Permissions } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@5.0.6/dist/esm/index.js';
 
 class SpeechRecorder {
     constructor() {
@@ -46,19 +44,6 @@ class SpeechRecorder {
 
         console.log('[SpeechRecorder] Starting recording...');
         try {
-            console.log('[SpeechRecorder] About to request microphone permission');
-            // Request microphone permission if running in Capacitor/native
-            if (window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform !== 'web')) {
-                console.log('[SpeechRecorder] Detected Capacitor/native environment');
-                const status = await Permissions.request({ name: 'microphone' });
-                console.log('[SpeechRecorder] Microphone permission request result:', status);
-                if (status.state !== 'granted') {
-                    alert('Microphone permission is required for this feature. Please enable it in your device settings.');
-                    return;
-                }
-            } else {
-                console.log('[SpeechRecorder] Not running in Capacitor/native, skipping Permissions.request');
-            }
             console.log('[SpeechRecorder] Requesting getUserMedia...');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 console.error('[SpeechRecorder] navigator.mediaDevices.getUserMedia is not available!');
