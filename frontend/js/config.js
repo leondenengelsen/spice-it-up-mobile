@@ -17,6 +17,10 @@ const isCapacitor = !!(window.Capacitor && (window.Capacitor.isNative || window.
 
 // Get the current environment
 const getCurrentEnvironment = () => {
+  // Force production if running in Capacitor/native (Android/iOS)
+  if (isCapacitor) {
+    return 'production';
+  }
   // Use production if on Netlify or a non-localhost domain
   if (window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')) {
     return 'development';

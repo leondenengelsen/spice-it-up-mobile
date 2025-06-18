@@ -128,25 +128,37 @@ async function getCurrentUser() {
   }
 }
 
+// Helper to detect favorites page robustly
+function isFavoritesPage() {
+  const path = window.location.pathname.replace(/^\//, ''); // Remove leading slash if present
+  return (
+    path === 'favorites' ||
+    path === 'favorites.html' ||
+    window.location.pathname.endsWith('/favorites') ||
+    window.location.pathname.endsWith('/favorites.html')
+  );
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[favorites.js] DOMContentLoaded fired. Current path:', window.location.pathname);
   // Initialize auth state listener
   onAuthStateChanged(auth, async (user) => {
+    console.log('[favorites.js] onAuthStateChanged user:', user);
     if (user) {
       console.log('[favorites.js] User authenticated:', user.email);
       try {
         // Get internal user ID from the API
         await getCurrentUser();
         // Initialize favorites page only if we're on the favorites page
-        if (window.location.pathname.endsWith('/favorites') || window.location.pathname.endsWith('/favorites.html')) {
-          console.log('[favorites.js] Path includes favorites.html, initializing favorites page.');
+        if (isFavoritesPage()) {
+          console.log('[favorites.js] Path matches favorites page, initializing favorites page.');
           initializeFavoritesPage();
         } else {
-          console.log('[favorites.js] Path does NOT include favorites.html, not initializing favorites page.');
+          console.log('[favorites.js] Path does NOT match favorites page, not initializing favorites page.');
         }
       } catch (error) {
         console.error('[favorites.js] Error getting user info:', error);
-        if (window.location.pathname.endsWith('/favorites') || window.location.pathname.endsWith('/favorites.html')) {
+        if (isFavoritesPage()) {
           showError('Failed to load user information. Please try again.');
         }
       }
@@ -155,14 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUserId = null;
       // Redirect to login page only for protected pages that require auth
       const currentPath = window.location.pathname;
-      if (currentPath.endsWith('/favorites') || currentPath.endsWith('/favorites.html') || currentPath.endsWith('/admin.html') || currentPath.endsWith('/account-settings.html')) {
+      if (
+        isFavoritesPage() ||
+        currentPath.endsWith('/admin.html') ||
+        currentPath.endsWith('/account-settings.html')
+      ) {
         window.location.href = '/login.html';
       }
     }
   });
   
   // Navigation (only on favorites page to avoid conflicts with app.js)
-  if (window.location.pathname.endsWith('/favorites') || window.location.pathname.endsWith('/favorites.html')) {
+  if (isFavoritesPage()) {
     console.log('[favorites.js] Setting up hamburger navigation for favorites page.');
     const hamburger = document.getElementById('hamburger');
     if (hamburger) {
