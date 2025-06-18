@@ -35,14 +35,17 @@ class SpeechRecorder {
         console.log('Starting recording...');
         
         try {
+            console.log('About to request microphone permission');
             // Request microphone permission if running in Capacitor/native
             if (window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform !== 'web')) {
                 const status = await Permissions.request({ name: 'microphone' });
+                console.log('Microphone permission request result:', status);
                 if (status.state !== 'granted') {
                     alert('Microphone permission is required for this feature. Please enable it in your device settings.');
                     return;
                 }
             }
+            console.log('Requesting getUserMedia...');
             // Request microphone permission and get stream
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
