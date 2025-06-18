@@ -52,10 +52,13 @@ app.use(cors({
     console.log('✅ CORS allowed request from:', origin);
     return callback(null, true);
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Ensure Express handles preflight OPTIONS requests for all routes
+app.options('*', cors());
 
 app.use(express.json());
 
