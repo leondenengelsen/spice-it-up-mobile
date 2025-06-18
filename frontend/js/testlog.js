@@ -1,0 +1,1 @@
+console.log('[TestLog] testlog.js loaded!'); 

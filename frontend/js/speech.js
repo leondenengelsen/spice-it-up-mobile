@@ -1,12 +1,13 @@
 console.log('[SpeechRecorder] speech.js script tag executed!');
-
-window.speechRecorder = new SpeechRecorder();
-window.startRecording = () => window.speechRecorder.startRecording();
-window.stopRecording = () => window.speechRecorder.stopRecording();
-console.log('[SpeechRecorder] speech.js loaded!');
-
-window.addEventListener('startRecording', () => {
-    console.log('[SpeechRecorder] startRecording event RECEIVED');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[SpeechRecorder] DOMContentLoaded fired!');
+    window.speechRecorder = new SpeechRecorder();
+    window.startRecording = () => window.speechRecorder.startRecording();
+    window.stopRecording = () => window.speechRecorder.stopRecording();
+    console.log('[SpeechRecorder] speech.js loaded!');
+    window.addEventListener('startRecording', () => {
+        console.log('[SpeechRecorder] startRecording event RECEIVED');
+    });
 });
 
 // Import getApiUrl from config
