@@ -28,24 +28,29 @@ class SpeechRecorder {
 
     async startRecording() {
         if (this.isRecording) {
-            console.log('Already recording, ignoring start request');
+            console.log('[SpeechRecorder] Already recording, ignoring start request');
             return;
         }
 
-        console.log('Starting recording...');
-        
+        console.log('[SpeechRecorder] Starting recording...');
         try {
-            console.log('About to request microphone permission');
+            console.log('[SpeechRecorder] About to request microphone permission');
             // Request microphone permission if running in Capacitor/native
             if (window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform !== 'web')) {
+                console.log('[SpeechRecorder] Detected Capacitor/native environment');
                 const status = await Permissions.request({ name: 'microphone' });
-                console.log('Microphone permission request result:', status);
+                console.log('[SpeechRecorder] Microphone permission request result:', status);
                 if (status.state !== 'granted') {
                     alert('Microphone permission is required for this feature. Please enable it in your device settings.');
                     return;
                 }
+            } else {
+                console.log('[SpeechRecorder] Not running in Capacitor/native, skipping Permissions.request');
             }
-            console.log('Requesting getUserMedia...');
+            console.log('[SpeechRecorder] Requesting getUserMedia...');
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('[SpeechRecorder] navigator.mediaDevices.getUserMedia is not available!');
+            }
             // Request microphone permission and get stream
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
@@ -54,34 +59,32 @@ class SpeechRecorder {
                     autoGainControl: true
                 }
             });
-            
-            console.log('Got microphone permission and stream');
-            
+            console.log('[SpeechRecorder] Got microphone permission and stream:', stream);
             // Create MediaRecorder with the stream
             this.mediaRecorder = new MediaRecorder(stream, {
                 mimeType: 'audio/webm;codecs=opus'
             });
-            
+            console.log('[SpeechRecorder] MediaRecorder created:', this.mediaRecorder);
             this.audioChunks = [];
             this.hasPermission = true;
 
             // Handle data available event
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
-                    console.log('Received audio chunk:', event.data.size, 'bytes');
+                    console.log('[SpeechRecorder] Received audio chunk:', event.data.size, 'bytes');
                     this.audioChunks.push(event.data);
                 }
             };
 
             // Handle recording stop
             this.mediaRecorder.onstop = async () => {
-                console.log('Recording stopped, processing audio...');
+                console.log('[SpeechRecorder] Recording stopped, processing audio...');
                 if (this.audioChunks.length > 0) {
                     const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                    console.log('Audio blob created, size:', audioBlob.size, 'bytes');
+                    console.log('[SpeechRecorder] Audio blob created, size:', audioBlob.size, 'bytes');
                     await this.sendAudioToServer(audioBlob);
                 } else {
-                    console.log('No audio chunks recorded');
+                    console.log('[SpeechRecorder] No audio chunks recorded');
                 }
                 // Stop all tracks in the stream
                 stream.getTracks().forEach(track => track.stop());
@@ -90,18 +93,18 @@ class SpeechRecorder {
             // Start recording
             this.mediaRecorder.start(100); // Collect data every 100ms
             this.isRecording = true;
-            console.log('Recording started successfully');
+            console.log('[SpeechRecorder] Recording started successfully');
 
             // Set timeout to stop recording after maxRecordingTime
             this.recordingTimeout = setTimeout(() => {
                 if (this.isRecording) {
-                    console.log('Max recording time reached, stopping...');
+                    console.log('[SpeechRecorder] Max recording time reached, stopping...');
                     this.stopRecording();
                 }
             }, this.maxRecordingTime);
 
         } catch (error) {
-            console.error('Error starting recording:', error);
+            console.error('[SpeechRecorder] Error starting recording:', error);
             this.isRecording = false;
             this.hasPermission = false;
             // Show error to user
@@ -212,4 +215,7 @@ class SpeechRecorder {
 // Initialize the speech recorder when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.speechRecorder = new SpeechRecorder();
+    // Expose start/stopRecording globally for troubleshooting and hybrid app compatibility
+    window.startRecording = () => window.speechRecorder.startRecording();
+    window.stopRecording = () => window.speechRecorder.stopRecording();
 }); 
