@@ -201,9 +201,9 @@ function loadFavorites() {
   const favoritesGrid = document.getElementById('favorites-grid');
   
   // Show loading state
-  loadingState.style.display = 'block';
-  emptyState.style.display = 'none';
-  favoritesGrid.style.display = 'none';
+  if (loadingState) loadingState.style.display = 'block';
+  if (emptyState) emptyState.style.display = 'none';
+  if (favoritesGrid) favoritesGrid.style.display = 'none';
   
   // Fetch favorites from database
   fetchFavoritesFromDatabase();
@@ -239,14 +239,14 @@ async function fetchFavoritesFromDatabase() {
       
       if (favorites.length === 0) {
         // Show empty state
-        loadingState.style.display = 'none';
-        emptyState.style.display = 'block';
-        favoritesGrid.style.display = 'none';
+        if (loadingState) loadingState.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+        if (favoritesGrid) favoritesGrid.style.display = 'none';
       } else {
         // Show favorites
-        loadingState.style.display = 'none';
-        emptyState.style.display = 'none';
-        favoritesGrid.style.display = 'block';
+        if (loadingState) loadingState.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'none';
+        if (favoritesGrid) favoritesGrid.style.display = 'block';
         renderFavorites(favorites);
       }
     } else {
