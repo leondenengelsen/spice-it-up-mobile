@@ -218,4 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose start/stopRecording globally for troubleshooting and hybrid app compatibility
     window.startRecording = () => window.speechRecorder.startRecording();
     window.stopRecording = () => window.speechRecorder.stopRecording();
+    console.log('[SpeechRecorder] speech.js loaded!');
+    window.addEventListener('startRecording', () => {
+        console.log('[SpeechRecorder] startRecording event RECEIVED');
+    });
 }); 
