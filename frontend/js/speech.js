@@ -1,7 +1,4 @@
 console.log('[SpeechRecorder] speech.js script tag executed!');
-// import { getApiUrl } from './config.js';
-// import { Permissions } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@5.0.6/dist/esm/index.js';
-import { Media } from '@capacitor-community/media';
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[SpeechRecorder] DOMContentLoaded fired!');
