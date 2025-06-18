@@ -27,7 +27,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://192.168.0.211:3000',
   'https://spice-it-up-api.onrender.com',
-  'https://spice-it-up.onrender.com'
+  'https://spice-it-up.onrender.com',
+  'https://spice-it-up-app.netlify.app' // Netlify frontend
 ];
 
 // Add any additional origins from environment variable
