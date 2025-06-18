@@ -7,8 +7,8 @@ const config = {
   },
   // Production environment (your actual backend server)
   production: {
-    browser: 'https://spice-it-up-api.onrender.com',
-    mobile: 'https://spice-it-up-api.onrender.com'
+    browser: 'https://spice-it-up-mobile-production.up.railway.app',
+    mobile: 'https://spice-it-up-mobile-production.up.railway.app'
   }
 };
 
