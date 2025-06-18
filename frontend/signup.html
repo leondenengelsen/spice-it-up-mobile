@@ -16,7 +16,7 @@
             <!-- Message Area -->
             <div id="message" class="message"></div>
             
-            <!-- Signup Form -->
+            <!-- Signup Form and script temporarily disabled to block new signups
             <form id="signup-form" class="auth-form">
                 <div class="form-group">
                     <input type="text" id="signup-username" placeholder="Username" required>
@@ -30,21 +30,20 @@
                 <button type="submit">Create Account</button>
                 <p class="toggle-form">Already have an account? <a href="login.html">Log In</a></p>
             </form>
+            <script type="module">
+                import { handleSignup } from './js/firebase/auth.js';
+                import authManager from './js/firebase/authStateManager.js';
+                // Handle signup form submission
+                // document.getElementById('signup-form').onsubmit = async (e) => {
+                //     e.preventDefault();
+                //     const email = document.getElementById('signup-email').value;
+                //     const password = document.getElementById('signup-password').value;
+                //     const username = document.getElementById('signup-username').value;
+                //     await handleSignup(email, password, username);
+                // };
+            </script>
+            -->
         </div>
     </div>
-
-    <script type="module">
-        import { handleSignup } from './js/firebase/auth.js';
-        import authManager from './js/firebase/authStateManager.js';
-
-        // Handle signup form submission
-        document.getElementById('signup-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const username = document.getElementById('signup-username').value;
-            await handleSignup(email, password, username);
-        };
-    </script>
 </body>
 </html> 
