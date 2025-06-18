@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const speechRoutes = require('./routes/speechRoutes');
+const fs = require('fs');
 require('dotenv').config();
 
 console.log("✅ Loaded DB config:", {
@@ -77,5 +78,22 @@ app.use('/api/recipes', recipeRoutes);
 
 // Serve frontend static files (AFTER all API routes)
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Handle Google service account credentials for Railway
+if (process.env.RAILWAY_ENVIRONMENT_NAME) { // Only do this on Railway
+  // Speech-to-Text service account
+  if (process.env['gen-lang-client-0251517490-157aa58a7fda.json']) {
+    const speechCredentialsPath = path.join(__dirname, 'gen-lang-client-0251517490-157aa58a7fda.json');
+    fs.writeFileSync(speechCredentialsPath, process.env['gen-lang-client-0251517490-157aa58a7fda.json']);
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = speechCredentialsPath;
+  }
+  // Firebase Admin SDK service account
+  if (process.env['gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json']) {
+    const firebaseCredentialsPath = path.join(__dirname, 'gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json');
+    fs.writeFileSync(firebaseCredentialsPath, process.env['gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json']);
+    // If you want to use this for Firebase, set a custom env var or use directly in your Firebase init
+    process.env.FIREBASE_ADMIN_CREDENTIALS = firebaseCredentialsPath;
+  }
+}
 
 module.exports = app;

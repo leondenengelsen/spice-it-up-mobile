@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const path = require('path');
 
 let firebaseApp = null;
 
@@ -12,11 +13,20 @@ const mockUser = {
   name: 'Development User'
 };
 
+// Determine credentials path
+let firebaseCredentialsPath;
+if (process.env.FIREBASE_ADMIN_CREDENTIALS) {
+  firebaseCredentialsPath = process.env.FIREBASE_ADMIN_CREDENTIALS;
+} else {
+  // Local development: use secrets directory
+  firebaseCredentialsPath = path.join(__dirname, '../secrets/gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json');
+}
+
 function initializeFirebase() {
   try {
     // Always initialize with the real Firebase config
     console.log(`🔥 Initializing Firebase in ${isDevelopment ? 'development' : 'production'} mode`);
-    const serviceAccount = require('../secrets/gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json');
+    const serviceAccount = require(firebaseCredentialsPath);
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });

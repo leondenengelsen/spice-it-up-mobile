@@ -1,5 +1,15 @@
 // server.js
 
+const fs = require('fs');
+const path = require('path');
+
+// Write Firebase Admin SDK service account JSON to a file (for Railway)
+if (process.env['gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json']) {
+  const firebaseCredentialsPath = path.join(__dirname, 'gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json');
+  fs.writeFileSync(firebaseCredentialsPath, process.env['gen-lang-client-0251517490-firebase-adminsdk-fbsvc-2562b31be4.json']);
+  process.env.FIREBASE_ADMIN_CREDENTIALS = firebaseCredentialsPath;
+}
+
 require('dotenv').config(); // Load environment variables
 const app = require('./app');
 const PORT = process.env.PORT || 3000;

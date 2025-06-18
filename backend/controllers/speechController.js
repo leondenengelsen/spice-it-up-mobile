@@ -1,8 +1,14 @@
 const speech = require('@google-cloud/speech');
 const path = require('path');
 
-// Path to the Google Cloud credentials file
-const credentialsPath = path.join(__dirname, '../secrets/gen-lang-client-0251517490-157aa58a7fda.json');
+// Determine credentials path
+let credentialsPath;
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+} else {
+  // Local development: use secrets directory
+  credentialsPath = path.join(__dirname, '../secrets/gen-lang-client-0251517490-157aa58a7fda.json');
+}
 
 // Log the credentials file path
 console.log('Google Cloud credentials file path:', credentialsPath);
