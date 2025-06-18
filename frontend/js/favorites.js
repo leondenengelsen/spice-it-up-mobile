@@ -129,25 +129,29 @@ async function getCurrentUser() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('[favorites.js] DOMContentLoaded fired. Current path:', window.location.pathname);
   // Initialize auth state listener
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      console.log('✅ User authenticated');
+      console.log('[favorites.js] User authenticated:', user.email);
       try {
         // Get internal user ID from the API
         await getCurrentUser();
         // Initialize favorites page only if we're on the favorites page
         if (window.location.pathname.includes('favorites.html')) {
+          console.log('[favorites.js] Path includes favorites.html, initializing favorites page.');
           initializeFavoritesPage();
+        } else {
+          console.log('[favorites.js] Path does NOT include favorites.html, not initializing favorites page.');
         }
       } catch (error) {
-        console.error('Error getting user info:', error);
+        console.error('[favorites.js] Error getting user info:', error);
         if (window.location.pathname.includes('favorites.html')) {
           showError('Failed to load user information. Please try again.');
         }
       }
     } else {
-      console.log('❌ No authenticated user');
+      console.log('[favorites.js] No authenticated user');
       currentUserId = null;
       // Redirect to login page only for protected pages that require auth
       const currentPath = window.location.pathname;
@@ -159,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Navigation (only on favorites page to avoid conflicts with app.js)
   if (window.location.pathname.includes('favorites.html')) {
+    console.log('[favorites.js] Setting up hamburger navigation for favorites page.');
     const hamburger = document.getElementById('hamburger');
     if (hamburger) {
       hamburger.onclick = () => {
@@ -169,11 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeFavoritesPage() {
-  console.log('initializeFavoritesPage called');
+  console.log('[favorites.js] initializeFavoritesPage called');
   loadFavorites();
 }
 
 function loadFavorites() {
+  console.log('[favorites.js] loadFavorites called');
   const loadingState = document.getElementById('loading-state');
   const emptyState = document.getElementById('empty-state');
   const favoritesGrid = document.getElementById('favorites-grid');
@@ -188,7 +194,7 @@ function loadFavorites() {
 }
 
 async function fetchFavoritesFromDatabase() {
-  console.log('fetchFavoritesFromDatabase called');
+  console.log('[favorites.js] fetchFavoritesFromDatabase called');
   const loadingState = document.getElementById('loading-state');
   const emptyState = document.getElementById('empty-state');
   const favoritesGrid = document.getElementById('favorites-grid');
@@ -197,12 +203,13 @@ async function fetchFavoritesFromDatabase() {
     // Get Firebase token for authentication
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
+      console.log('[favorites.js] No firebaseToken found in localStorage');
       showError('Please log in to view your favorites.');
       return;
     }
 
     const apiUrl = `${getApiUrl()}/api/favorites`;
-    console.log('API URL for favorites:', apiUrl);
+    console.log('[favorites.js] API URL for favorites:', apiUrl);
     const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -212,6 +219,7 @@ async function fetchFavoritesFromDatabase() {
     if (response.ok) {
       const result = await response.json();
       const favorites = result.favorites || [];
+      console.log('[favorites.js] Fetched favorites:', favorites);
       
       if (favorites.length === 0) {
         // Show empty state
@@ -226,11 +234,11 @@ async function fetchFavoritesFromDatabase() {
         renderFavorites(favorites);
       }
     } else {
-      console.error('Failed to fetch favorites:', response.statusText);
+      console.error('[favorites.js] Failed to fetch favorites:', response.statusText);
       showError('Failed to load favorites. Please try again.');
     }
   } catch (error) {
-    console.error('Error fetching favorites:', error);
+    console.error('[favorites.js] Error fetching favorites:', error);
     showError('Error loading favorites. Please try again.');
   }
 }
