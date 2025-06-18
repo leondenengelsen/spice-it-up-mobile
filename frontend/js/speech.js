@@ -1,3 +1,16 @@
+console.log('[SpeechRecorder] speech.js script tag executed!');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[SpeechRecorder] DOMContentLoaded fired!');
+    window.speechRecorder = new SpeechRecorder();
+    // Expose start/stopRecording globally for troubleshooting and hybrid app compatibility
+    window.startRecording = () => window.speechRecorder.startRecording();
+    window.stopRecording = () => window.speechRecorder.stopRecording();
+    console.log('[SpeechRecorder] speech.js loaded!');
+    window.addEventListener('startRecording', () => {
+        console.log('[SpeechRecorder] startRecording event RECEIVED');
+    });
+});
+
 // Import getApiUrl from config
 import { getApiUrl } from './config.js';
 import { Permissions } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@5.0.6/dist/esm/index.js';
@@ -210,16 +223,4 @@ class SpeechRecorder {
             reader.readAsDataURL(blob);
         });
     }
-}
-
-// Initialize the speech recorder when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.speechRecorder = new SpeechRecorder();
-    // Expose start/stopRecording globally for troubleshooting and hybrid app compatibility
-    window.startRecording = () => window.speechRecorder.startRecording();
-    window.stopRecording = () => window.speechRecorder.stopRecording();
-    console.log('[SpeechRecorder] speech.js loaded!');
-    window.addEventListener('startRecording', () => {
-        console.log('[SpeechRecorder] startRecording event RECEIVED');
-    });
-}); 
+} 
