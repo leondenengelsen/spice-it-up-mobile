@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#A1C181" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Info – Spice It Up</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/header-shared.css" />
+  <link rel="stylesheet" href="css/info.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="app-header">
+    <a href="options.html" aria-label="Go back to options" class="header-link">
+      <button class="header-btn" aria-label="Back" tabindex="-1">
+        <span class="header-emoji">←</span>
+      </button>
+    </a>
+    <div class="app-title">
+      <!-- Empty title to maintain layout balance -->
+    </div>
+    <div class="header-actions">
+      <!-- Empty div to maintain layout balance -->
+    </div>
+  </header>
+
+  <main id="info-page">
+    <section class="info-container">
+      <div class="info-content">
+        <h2 class="info-title">Welcome to Spice It Up!</h2>
+        
+        <div class="info-section">
+          <h3>What is Spice It Up?</h3>
+          <p>Spice It Up is your personal AI-powered recipe assistant that helps you discover exciting new dishes based on your preferences, dietary restrictions, and available ingredients.</p>
+        </div>
+
+        <div class="info-section">
+          <h3>How to Use</h3>
+          <ol class="usage-steps">
+            <li>Enter your ingredients or describe what you're craving</li>
+            <li>Adjust your portions and adventurousness level in Settings</li>
+            <li>Set your dietary restrictions and allergies</li>
+            <li>Get personalized recipe suggestions from our AI chef</li>
+            <li>Save your favorite recipes to your collection</li>
+          </ol>
+        </div>
+
+        <div class="info-section">
+          <h3>Features</h3>
+          <ul class="features-list">
+            <li>AI-powered recipe generation</li>
+            <li>Dietary restriction support (vegetarian, low FODMAP, etc.)</li>
+            <li>Allergy-friendly suggestions</li>
+            <li>Portion size customization</li>
+            <li>Adventure level adjustment</li>
+            <li>Favorite recipe collection</li>
+          </ul>
+        </div>
+
+        <div class="info-section">
+          <h3>Tips for Best Results</h3>
+          <p>Be specific about your ingredients and preferences. The more details you provide, the better your recipe suggestions will be. Don't be afraid to experiment with different adventure levels!</p>
+        </div>
+      </div>
+
+      <div class="info-actions">
+        <button class="info-action-btn" id="terms-btn">Terms & Conditions</button>
+        <button class="info-action-btn" id="contact-btn">Contact Us</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase/authStateManager.js"></script>
+  <script type="module" src="js/info.js"></script>
+</body>
+</html> 

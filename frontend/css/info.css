@@ -1,0 +1,166 @@
+/* ========================
+   Info Page Styles
+======================== */
+
+#info-page {
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.5rem;
+  background: var(--main-bg, #fff7e6);
+  min-height: calc(100vh - 80px);
+}
+
+.info-container {
+  position: relative;
+  width: 90%;
+  margin: 1em auto;
+  padding: 1.5em;
+  border-radius: var(--radius-lg);
+  background: #A1C181;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow-soft);
+  max-width: 600px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ========================
+   Content Layout
+======================== */
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.info-title {
+  font-size: 1.8rem;
+  text-align: center;
+  color: white;
+  margin: 0 0 1em 0;
+  font-weight: 500;
+  width: 100%;
+}
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+}
+
+.info-section h3 {
+  font-size: 1.2rem;
+  color: white;
+  margin: 0;
+  font-weight: 500;
+}
+
+.info-section p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: white;
+  margin: 0;
+}
+
+/* ========================
+   Lists
+======================== */
+
+.usage-steps {
+  margin: 0;
+  padding-left: 1.2em;
+  color: white;
+}
+
+.usage-steps li {
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.features-list {
+  margin: 0;
+  padding-left: 1.2em;
+  color: white;
+}
+
+.features-list li {
+  margin-bottom: 0.3em;
+  line-height: 1.4;
+}
+
+/* ========================
+   Action Buttons
+======================== */
+
+.info-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-top: 2em;
+  padding-top: 1.5em;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.info-action-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 1em;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 0.8em;
+  background: var(--suggestion-bg);
+  color: var(--suggestion-text);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s, background-color 0.2s;
+}
+
+.info-action-btn:hover {
+  background-color: #548b7a;
+  transform: scale(1.02);
+}
+
+.info-action-btn:active {
+  transform: scale(0.98);
+}
+
+/* ========================
+   Mobile Enhancements
+======================== */
+
+@media (max-width: 480px) {
+  .info-container {
+    margin: 0;
+    border-radius: 1.2em 1.2em 0 0;
+    box-shadow: none;
+  }
+
+  .info-title {
+    font-size: 1.6rem;
+  }
+
+  .info-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .info-action-btn {
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+}
+
+/* ========================
+   Safe Area Support
+======================== */
+
+@supports(padding: max(0px)) {
+  .info-container {
+    padding-left: max(1.5em, env(safe-area-inset-left));
+    padding-right: max(1.5em, env(safe-area-inset-right));
+    padding-bottom: max(1.5em, env(safe-area-inset-bottom));
+  }
+} 
