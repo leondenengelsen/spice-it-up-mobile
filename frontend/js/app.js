@@ -379,6 +379,18 @@ async function renderRecipes(text) {
   // Store the original text for back button functionality
   section.setAttribute('data-original-text', cleanedText);
   
+  // Get user allergies for display
+  const allergies = await getUserAllergies();
+  const allergyNote = formatAllergyNote(allergies);
+  
+  // Add allergy note if available
+  if (allergyNote) {
+    const allergyDiv = document.createElement('div');
+    allergyDiv.className = 'allergy-note';
+    allergyDiv.innerHTML = allergyNote;
+    section.appendChild(allergyDiv);
+  }
+  
   // Split into ideas (each idea is separated by two newlines)
   const ideas = cleanedText.trim().split(/\n\s*\n/).filter(Boolean);
   ideas.forEach((idea, idx) => {

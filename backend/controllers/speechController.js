@@ -150,7 +150,7 @@ exports.transcribeSpeech = async (req, res) => {
         sampleRateHertz: 48000,
         languageCode: 'en-US',
         model: 'default',
-        enableAutomaticPunctuation: true,
+        enableAutomaticPunctuation: false,
       },
     };
 
