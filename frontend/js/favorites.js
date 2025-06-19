@@ -83,9 +83,12 @@ function formatAllergyNote(allergies) {
     vegetarian: 'Vegetarian'
   };
 
-  // Filter out lowfodmap from regular allergies display
-  const regularAllergies = allergies.filter(allergy => allergy !== 'lowfodmap');
+  // Filter out lowfodmap and vegetarian from regular allergies display
+  const regularAllergies = allergies.filter(allergy => 
+    allergy !== 'lowfodmap' && allergy !== 'vegetarian'
+  );
   const hasLowFodmap = allergies.includes('lowfodmap');
+  const hasVegetarian = allergies.includes('vegetarian');
 
   const displayAllergies = regularAllergies.map(allergy => 
     allergyLabels[allergy] || allergy
@@ -98,6 +101,9 @@ function formatAllergyNote(allergies) {
   }
   if (hasLowFodmap) {
     parts.push('Low FODMAP friendly');
+  }
+  if (hasVegetarian) {
+    parts.push('Vegetarian');
   }
 
   return parts.join(' • ');
@@ -447,7 +453,7 @@ async function showFullRecipe(recipeId) {
         </div>
         ${allergyHtml}
         <div class="full-recipe-content">
-          ${recipe.content ? recipe.content.replace(/\n/g, '<br>') : recipe.description.replace(/\n/g, '<br>')}
+          ${renderRecipeContent(recipe)}
         </div>
         <button id="back-to-ideas" class="back-button">← Back to favorites</button>
       </div>
@@ -479,7 +485,7 @@ function renderRecipeContent(recipe) {
     
     // Add ingredients section if available
     if (recipe.ingredients) {
-      content += '<h3>Ingredients:</h3>\n<ul>';
+      content += '<p><strong>Ingredients:</strong></p><br>\n<ul>';
       try {
         // Parse ingredients if it's a string, otherwise use as is
         const ingredients = typeof recipe.ingredients === 'string' 
@@ -498,7 +504,7 @@ function renderRecipeContent(recipe) {
           ) {
             const headerText = ing.text || ing.name.replace(/^\*\*|\*\*$/g, '');
             if (headerText.toLowerCase().includes('ingredients:')) return; // Skip main ingredients header
-            content += `</ul>\n<h4>${headerText}</h4>\n<ul>`;
+            content += `</ul>\n<p><strong>${headerText}</strong></p>\n<ul>`;
             return;
           }
           
@@ -557,7 +563,7 @@ function renderRecipeContent(recipe) {
     
     // Add instructions section if available
     if (recipe.instructions) {
-      content += '<h3>Instructions:</h3>\n';
+      content += '<p><strong>Instructions:</strong></p><br>\n';
       content += recipe.instructions.replace(/\n/g, '<br>') + '\n\n';
     }
     
@@ -570,7 +576,7 @@ function renderRecipeContent(recipe) {
           : recipe.steps;
 
         if (!recipe.instructions && steps.length > 0) {
-          content += '<h3>Steps:</h3>\n<ol>';
+          content += '<p><strong>Instructions:</strong></p><br>\n<ol>';
           steps.forEach(step => {
             // Skip empty steps or formatting
             if (step && !step.startsWith('*') && !step.startsWith('Tips')) {

@@ -110,6 +110,30 @@
   border-top: 1px solid var(--color-border, #eee);
 }
 
+.dietary-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.dietary-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.dietary-checkboxes {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.dietary-section label {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
 .lowfodmap-checkbox {
   position: relative;
   display: flex;
@@ -163,6 +187,69 @@
 }
 
 .lowfodmap-checkbox input[type="checkbox"]:checked + .lowfodmap-label::after {
+  content: '✓';
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.8rem;
+}
+
+/* Vegetarian checkbox styling (matching lowfodmap) */
+.vegetarian-checkbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.6rem;
+  background: var(--color-bg, white);
+  border: 1px solid var(--color-muted, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vegetarian-checkbox:hover {
+  border-color: var(--suggestion-bg);
+  background: var(--main-bg);
+}
+
+.vegetarian-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.vegetarian-label {
+  padding-left: 2rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.vegetarian-checkbox input[type="checkbox"] + .vegetarian-label::before {
+  content: '';
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid var(--color-muted);
+  border-radius: 4px;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.vegetarian-checkbox input[type="checkbox"]:checked + .vegetarian-label::before {
+  background-color: var(--suggestion-bg);
+  border-color: var(--suggestion-bg);
+}
+
+.vegetarian-checkbox input[type="checkbox"]:checked + .vegetarian-label::after {
   content: '✓';
   position: absolute;
   left: 0.85rem;

@@ -177,3 +177,16 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
   margin: 8px 0;
   text-align: center;
 }
+
+/* ========================
+   Recipe Content Headers
+======================== */
+.full-recipe-content {
+  line-height: 1.6;
+}
+
+/* Style recipe section headers when they appear in content */
+.full-recipe-content p strong {
+  font-weight: bold !important;
+  font-size: 1em;
+}

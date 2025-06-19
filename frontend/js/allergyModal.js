@@ -29,11 +29,19 @@ export class AllergyModal {
             </div>
             
             <div class="dietary-section">
-              <label class="lowfodmap-checkbox">
-                <input type="checkbox" id="lowfodmap-checkbox" 
-                       ${this.selectedAllergies.has('lowfodmap') ? 'checked' : ''}>
-                <span class="lowfodmap-label">Low FODMAP</span>
-              </label>
+              <h4>Dietary Restrictions</h4>
+              <div class="dietary-checkboxes">
+                <label class="lowfodmap-checkbox">
+                  <input type="checkbox" id="lowfodmap-checkbox" 
+                         ${this.selectedAllergies.has('lowfodmap') ? 'checked' : ''}>
+                  <span class="lowfodmap-label">Low FODMAP (IBS)</span>
+                </label>
+                <label class="vegetarian-checkbox">
+                  <input type="checkbox" id="vegetarian-checkbox" 
+                         ${this.selectedAllergies.has('vegetarian') ? 'checked' : ''}>
+                  <span class="vegetarian-label">Vegetarian</span>
+                </label>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -74,8 +82,7 @@ export class AllergyModal {
       { value: 'nightshades', label: 'Nightshades' },
       { value: 'corn', label: 'Corn' },
       { value: 'lactose', label: 'Lactose' },
-      { value: 'vegan', label: 'Vegan' },
-      { value: 'vegetarian', label: 'Vegetarian' }
+      { value: 'vegan', label: 'Vegan' }
     ];
 
     return allergies.map(allergy => `
@@ -122,6 +129,18 @@ export class AllergyModal {
           this.selectedAllergies.add('lowfodmap');
         } else {
           this.selectedAllergies.delete('lowfodmap');
+        }
+      });
+    }
+
+    // Handle Vegetarian checkbox separately
+    const vegetarianCheckbox = this.modal.querySelector('#vegetarian-checkbox');
+    if (vegetarianCheckbox) {
+      vegetarianCheckbox.addEventListener('change', () => {
+        if (vegetarianCheckbox.checked) {
+          this.selectedAllergies.add('vegetarian');
+        } else {
+          this.selectedAllergies.delete('vegetarian');
         }
       });
     }

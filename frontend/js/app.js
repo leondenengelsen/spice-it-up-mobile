@@ -79,9 +79,12 @@ function formatAllergyNote(allergies) {
     vegetarian: 'Vegetarian'
   };
 
-  // Filter out lowfodmap from regular allergies display
-  const regularAllergies = allergies.filter(allergy => allergy !== 'lowfodmap');
+  // Filter out lowfodmap and vegetarian from regular allergies display
+  const regularAllergies = allergies.filter(allergy => 
+    allergy !== 'lowfodmap' && allergy !== 'vegetarian'
+  );
   const hasLowFodmap = allergies.includes('lowfodmap');
+  const hasVegetarian = allergies.includes('vegetarian');
 
   const displayAllergies = regularAllergies.map(allergy => 
     allergyLabels[allergy] || allergy
@@ -94,6 +97,9 @@ function formatAllergyNote(allergies) {
   }
   if (hasLowFodmap) {
     parts.push('Low FODMAP friendly');
+  }
+  if (hasVegetarian) {
+    parts.push('Vegetarian');
   }
 
   return parts.join(' • ');
@@ -221,6 +227,32 @@ function escapeHtml(text) {
 
 // Make escapeHtml available globally
 window.escapeHtml = escapeHtml;
+
+/**
+ * Format recipe content with bold headers
+ * @param {string} content - Recipe content text
+ * @returns {string} Formatted HTML content
+ */
+function formatRecipeContent(content) {
+  if (!content) return '';
+  
+  // Replace newlines with <br> first
+  let formattedContent = content.replace(/\n/g, '<br>');
+  
+  // Make recipe section headers bold and add extra spacing after them
+  formattedContent = formattedContent.replace(/(^|<br>)(Ingredients?:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Instructions?:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Notes?:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Steps?:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Method:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Directions?:)/gi, '$1<strong>$2</strong><br>');
+  formattedContent = formattedContent.replace(/(^|<br>)(Preparation:)/gi, '$1<strong>$2</strong><br>');
+  
+  return formattedContent;
+}
+
+// Make formatRecipeContent available globally
+window.formatRecipeContent = formatRecipeContent;
 
 // ========================
 // MAIN APP LOGIC
@@ -557,7 +589,7 @@ async function handleRecipeClick(idx, idea) {
             </button>
           </div>
           ${allergyHtml}
-          <div class="full-recipe-content">${data.message.replace(/\n/g, '<br>')}</div>
+          <div class="full-recipe-content">${formatRecipeContent(data.message)}</div>
           <button id="back-to-ideas" class="back-button">← Back to ideas</button>
         </div>
       `;

@@ -48,9 +48,9 @@ async function getUserAllergies(userId) {
 }
 
 /**
- * Get user allergies filtered to exclude lowfodmap (for separate handling)
+ * Get user allergies filtered to exclude lowfodmap and vegetarian (for separate handling)
  * @param {number} userId - The internal MySQL user ID
- * @returns {string} - The formatted allergies string (excluding lowfodmap) or empty string if not found
+ * @returns {string} - The formatted allergies string (excluding lowfodmap and vegetarian) or empty string if not found
  */
 async function getUserAllergiesFiltered(userId) {
   try {
@@ -89,8 +89,10 @@ async function getUserAllergiesFiltered(userId) {
       allergyArray = [String(allergies)];
     }
     
-    // Filter out lowfodmap
-    const filteredAllergies = allergyArray.filter(allergy => allergy !== 'lowfodmap');
+    // Filter out lowfodmap and vegetarian
+    const filteredAllergies = allergyArray.filter(allergy => 
+      allergy !== 'lowfodmap' && allergy !== 'vegetarian'
+    );
     
     return filteredAllergies.length > 0 ? filteredAllergies.join(', ') : '';
   } catch (err) {
@@ -150,6 +152,56 @@ async function getUserLowFodmap(userId) {
 }
 
 /**
+ * Check if user follows vegetarian diet
+ * @param {number} userId - The internal MySQL user ID
+ * @returns {boolean} - True if user has vegetarian in their allergies array
+ */
+async function getUserVegetarian(userId) {
+  try {
+    const [rows] = await db.query(
+      'SELECT allergies FROM options WHERE user_id = ?',
+      [userId]
+    );
+    
+    const allergies = rows[0]?.allergies;
+    
+    // If no allergies found, return false
+    if (!allergies) {
+      return false;
+    }
+    
+    let allergyArray = [];
+    
+    // Parse allergies into array format
+    if (Array.isArray(allergies)) {
+      allergyArray = allergies;
+    } else if (typeof allergies === 'string') {
+      try {
+        const parsedAllergies = JSON.parse(allergies);
+        if (Array.isArray(parsedAllergies)) {
+          allergyArray = parsedAllergies;
+        } else {
+          // If it's not an array after parsing, treat as single item
+          allergyArray = [allergies];
+        }
+      } catch (parseError) {
+        // If parsing fails, treat as single item
+        allergyArray = [allergies];
+      }
+    } else {
+      // For any other type, convert to array
+      allergyArray = [String(allergies)];
+    }
+    
+    // Check if vegetarian is in the array
+    return allergyArray.includes('vegetarian');
+  } catch (err) {
+    console.error('Error checking vegetarian status:', err);
+    return false;
+  }
+}
+
+/**
  * Get user adventurousness value from the options table (helper function)
  * @param {number} userId - The internal MySQL user ID
  * @returns {number} - The adventurousness value or 1 if not found
@@ -192,4 +244,4 @@ async function getUserAdventurousness(req, res) {
   }
 }
 
-module.exports = { getUserAllergies, getUserAllergiesFiltered, getUserLowFodmap, getUserAdventurousness, getUserAdventurenessValue }; 
+module.exports = { getUserAllergies, getUserAllergiesFiltered, getUserLowFodmap, getUserVegetarian, getUserAdventurousness, getUserAdventurenessValue }; 

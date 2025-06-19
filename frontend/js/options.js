@@ -303,8 +303,11 @@ function updateAllergySummary(allergies) {
   };
 
   // Separate allergies from dietary restrictions
-  const regularAllergies = allergies.filter(allergy => allergy !== 'lowfodmap');
+  const regularAllergies = allergies.filter(allergy => 
+    allergy !== 'lowfodmap' && allergy !== 'vegetarian'
+  );
   const hasLowFodmap = allergies.includes('lowfodmap');
+  const hasVegetarian = allergies.includes('vegetarian');
 
   let html = '';
 
@@ -316,13 +319,16 @@ function updateAllergySummary(allergies) {
     html += `<div class="allergy-tags">${allergyTags}</div>`;
   }
 
-  // Show Low FODMAP separately
-  if (hasLowFodmap) {
-    html += `<div class="dietary-tags"><span class="dietary-tag">Low FODMAP (IBS)</span></div>`;
+  // Show dietary restrictions separately
+  if (hasLowFodmap || hasVegetarian) {
+    const dietaryTags = [];
+    if (hasLowFodmap) dietaryTags.push('<span class="dietary-tag">Low FODMAP (IBS)</span>');
+    if (hasVegetarian) dietaryTags.push('<span class="dietary-tag vegetarian-tag">Vegetarian</span>');
+    html += `<div class="dietary-tags">${dietaryTags.join('')}</div>`;
   }
 
   // If nothing to show
-  if (!regularAllergies.length && !hasLowFodmap) {
+  if (!regularAllergies.length && !hasLowFodmap && !hasVegetarian) {
     html = '<p class="no-allergies">No allergies or dietary restrictions selected</p>';
   }
 

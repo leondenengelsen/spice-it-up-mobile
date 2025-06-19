@@ -8,12 +8,13 @@
  * @param {number} portions - Number of servings
  * @param {boolean} isDetailedRecipe - Whether this is for detailed recipe generation
  * @param {number} adventurousness - User's adventurousness level (1-6)
- * @param {string} allergies - User's allergies (null if none) - excludes lowfodmap
+ * @param {string} allergies - User's allergies (null if none) - excludes lowfodmap and vegetarian
  * @param {boolean} isLowFodmap - Whether user follows Low FODMAP diet
+ * @param {boolean} isVegetarian - Whether user follows vegetarian diet
  * @param {Object} recipeIdea - Recipe idea object for detailed recipe requests
  * @returns {string} The system message for AI
  */
-function getSystemMessage(mode = 'general', portions = 4, isDetailedRecipe = false, adventurousness = 3, allergies = null, isLowFodmap = false, recipeIdea = null) {
+function getSystemMessage(mode = 'general', portions = 4, isDetailedRecipe = false, adventurousness = 3, allergies = null, isLowFodmap = false, isVegetarian = false, recipeIdea = null) {
   let baseMessage;
   
   if (isDetailedRecipe && recipeIdea) {
@@ -46,9 +47,13 @@ function getSystemMessage(mode = 'general', portions = 4, isDetailedRecipe = fal
       ? `DIETARY: Follow Low FODMAP guidelines (avoid high-FODMAP foods like onions, garlic, wheat, beans, certain fruits)`
       : null;
     
+    const vegetarianNote = isVegetarian
+      ? `DIETARY: Follow vegetarian guidelines (avoid meat, poultry, fish, and seafood)`
+      : null;
+    
     const adventurenessNote = getAdventurenessInstruction(adventurousness);
     
-    const preferences = [allergyNote, lowFodmapNote, adventurenessNote].filter(Boolean).join('\n');
+    const preferences = [allergyNote, lowFodmapNote, vegetarianNote, adventurenessNote].filter(Boolean).join('\n');
     
     return preferences ? `${baseMessage}\n\n${preferences}` : baseMessage;
   } else {
@@ -61,13 +66,17 @@ function getSystemMessage(mode = 'general', portions = 4, isDetailedRecipe = fal
       ? `\n\nIMPORTANT: The user follows a Low FODMAP diet. Avoid high-FODMAP foods like onions, garlic, wheat-based products, beans, lentils, certain fruits (apples, pears), lactose-containing dairy, and artificial sweeteners. Use Low FODMAP alternatives where possible.`
       : '';
     
+    const vegetarianNote = isVegetarian
+      ? `\n\nIMPORTANT: The user follows a vegetarian diet. Avoid meat, poultry, fish, and seafood. Use plant-based protein alternatives where possible.`
+      : '';
+    
     const adventurenessNote = adventurousness <= 2 
       ? '\n\nIMPORTANT: Use only common ingredients that most people have at home. Keep techniques simple.'
       : adventurousness <= 4 
       ? '\n\nIMPORTANT: Use mostly common ingredients with some specialty items available at regular grocery stores.'
       : '\n\nIMPORTANT: Feel free to use creative, gourmet ingredients and advanced cooking techniques.';
     
-    return baseMessage + allergyNote + lowFodmapNote + adventurenessNote;
+    return baseMessage + allergyNote + lowFodmapNote + vegetarianNote + adventurenessNote;
   }
 }
 

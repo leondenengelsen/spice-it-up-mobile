@@ -9,20 +9,18 @@
   /* display: flex; */
   flex-direction: column;
   align-items: center;
-  padding-top: 1rem;
-  padding-bottom: 2rem;
+  padding-top: 0.5rem;
   background: var(--main-bg, #fff7e6); /* fallback color if --main-bg isn't set */
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* Account for header height */
 }
 
 .options-container {
   position: relative;
   width: 100%;
-  margin: 0.5em;
-  padding: 0.5em;
-  padding-bottom: 4rem; /* Add space for info button */
+  margin: 0.3em;
+  padding: 0.3em;
+  padding-bottom: 0.5rem; /* Minimal space for info button */
   border-radius: var(--radius-lg);
-  margin-bottom: env(safe-area-inset-bottom);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -34,14 +32,14 @@
 .options-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5em;
+  gap: 1em;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.8em;
-  margin-bottom: 1.2em;
+  gap: 0.6em;
+  margin-bottom: 0.8em;
 }
 
 /* ========================
@@ -49,7 +47,7 @@
 ======================== */
 .slider-group {
   width: 100%;
-  margin: 1em 0;
+  margin: 0.6em 0;
 }
 
 .slider-label {
@@ -57,7 +55,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 1rem;
-  padding: 0.5em 0;
+  padding: 0.3em 0;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -80,7 +78,7 @@
 input[type="range"] {
   width: 100%;
   height: 6px;
-  margin: 1em 0;
+  margin: 0.6em 0;
   background: #e1e1e1;
   border-radius: 3px;
   -webkit-appearance: none;
@@ -301,7 +299,6 @@ select {
   .options-container {
     padding-left: max(1em, env(safe-area-inset-left));
     padding-right: max(1em, env(safe-area-inset-right));
-    padding-bottom: max(1em, env(safe-area-inset-bottom));
   }
 }
 
@@ -316,25 +313,30 @@ select {
   }
 
   .slider-group {
-    margin: 0.8em 0;
+    margin: 0.5em 0;
   }
 
   .options-btn {
-    margin: 0.8em 0;
+    margin: 0.5em 0;
   }
 
   .options-btn + .options-btn {
-    margin-top: 0.5em;
+    margin-top: 0.3em;
   }
 }
 
 /* Old header and favorite icon styles removed - using shared header styles */
 
 .logout-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--color-border);
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
   text-align: center;
+  z-index: 10;
 }
 
 .logout-section .auth-button {
@@ -378,14 +380,14 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 
 .edit-btn {
   background: transparent;
   border: 1px solid var(--color-muted);
   color: var(--color-text);
-  padding: 0.4rem 1rem;
+  padding: 0.3rem 0.8rem;
   border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
@@ -402,8 +404,8 @@ select {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1rem;
-  min-height: 60px;
+  padding: 0.7rem;
+  min-height: 50px;
 }
 
 .allergy-summary .no-allergies {
@@ -442,11 +444,17 @@ select {
   border-radius: 1rem;
   font-size: 0.9rem;
   font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.dietary-tag.vegetarian-tag {
+  background: #27ae60;
+  color: white;
 }
 
 /* Info Button */
 .info-btn {
-  position: absolute;
+  position: fixed;
   bottom: 1rem;
   right: 1rem;
   width: 40px;
@@ -463,7 +471,6 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 1rem;
 }
 
 .info-btn:hover {
