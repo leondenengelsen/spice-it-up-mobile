@@ -318,35 +318,61 @@ class SpeechRecorder {
             }
 
             const data = await response.json();
-            console.log('Received transcription:', data);
-            if (data.text) {
-                console.log('Setting input field value to:', data.text);
+            console.log('📝 Received transcription response:', data);
+            console.log('📝 Response structure:', Object.keys(data));
+            console.log('📝 Text field value:', data.text);
+            console.log('📝 Text field type:', typeof data.text);
+            console.log('📝 Text field length:', data.text ? data.text.length : 0);
+            
+            if (data.text && data.text.trim()) {
+                console.log('✅ Setting input field value to:', data.text);
                 const inputField = document.getElementById('user-input');
                 if (!inputField) {
-                    console.error('Input field not found');
+                    console.error('❌ Input field with ID "user-input" not found');
+                    console.log('🔍 Available input fields:', document.querySelectorAll('input, textarea').length);
+                    // Try alternative selectors
+                    const alternativeInputs = document.querySelectorAll('input[type="text"], textarea, input[placeholder*="recipe"], input[placeholder*="ingredient"]');
+                    console.log('🔍 Alternative input fields found:', alternativeInputs.length);
+                    alternativeInputs.forEach((input, index) => {
+                        console.log(`  Input ${index}:`, {
+                            id: input.id,
+                            name: input.name,
+                            placeholder: input.placeholder,
+                            type: input.type
+                        });
+                    });
                     return;
                 }
-                inputField.value = data.text;
-                console.log('Input field value set to:', inputField.value);
                 
-                console.log('Dispatching input event to trigger recipe generation');
+                // Set the value
+                inputField.value = data.text;
+                console.log('✅ Input field value set to:', inputField.value);
+                
+                // Trigger events to ensure UI updates
                 inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                inputField.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Focus the input field to make it visible
+                inputField.focus();
+                
+                console.log('✅ Input events dispatched and field focused');
                 
                 // Also try to directly generate recipes
-                console.log('Checking if generateRecipes is available:', typeof window.generateRecipes);
+                console.log('🔍 Checking if generateRecipes is available:', typeof window.generateRecipes);
                 if (typeof window.generateRecipes === 'function') {
-                    console.log('Directly calling generateRecipes after transcription');
+                    console.log('🚀 Directly calling generateRecipes after transcription');
                     try {
                         await window.generateRecipes(true);
-                        console.log('generateRecipes called successfully');
+                        console.log('✅ generateRecipes called successfully');
                     } catch (error) {
-                        console.error('Error calling generateRecipes:', error);
+                        console.error('❌ Error calling generateRecipes:', error);
                     }
                 } else {
-                    console.error('generateRecipes function not found on window');
+                    console.log('⚠️ generateRecipes function not found on window');
                 }
             } else {
-                console.log('No transcription text received');
+                console.log('⚠️ No transcription text received or text is empty');
+                console.log('📝 Raw response data:', data);
             }
         } catch (error) {
             console.error('Error sending audio to server:', error);
