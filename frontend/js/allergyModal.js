@@ -48,7 +48,8 @@ export class AllergyModal {
 
   getAllergyCheckboxes() {
     const allergies = [
-      { value: 'milk', label: 'Milk' },
+      { value: 'gluten', label: 'Gluten' },
+      { value: 'dairy', label: 'All Dairy' },
       { value: 'eggs', label: 'Eggs' },
       { value: 'peanuts', label: 'Peanuts' },
       { value: 'tree_nuts', label: 'Tree Nuts' },
@@ -57,15 +58,15 @@ export class AllergyModal {
       { value: 'fish', label: 'Fish' },
       { value: 'shellfish', label: 'Shellfish' },
       { value: 'sesame', label: 'Sesame' },
-      { value: 'gluten', label: 'Gluten' },
+      { value: 'cowmilk', label: 'Cow Milk' },
       { value: 'mustard', label: 'Mustard' },
       { value: 'celery', label: 'Celery' },
       { value: 'lupin', label: 'Lupin' },
       { value: 'sulfites', label: 'Sulfites' },
       { value: 'nightshades', label: 'Nightshades' },
       { value: 'corn', label: 'Corn' },
-      { value: 'meat', label: 'Meat' },
-      { value: 'dairy', label: 'All Dairy' },
+      { value: 'lactose', label: 'Lactose' },
+      { value: 'lowfodmap', label: 'Low FODMAP' },
       { value: 'vegan', label: 'Vegan' },
       { value: 'vegetarian', label: 'Vegetarian' }
     ];

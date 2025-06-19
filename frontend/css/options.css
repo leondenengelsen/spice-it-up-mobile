@@ -334,6 +334,26 @@ select {
   text-align: center;
 }
 
+.logout-section .auth-button {
+  background-color: var(--suggestion-bg);
+  color: var(--suggestion-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  width: auto;
+  min-width: 150px;
+}
+
+.logout-section .auth-button:hover {
+  background-color: #548b7a;
+}
+
 .logout-btn {
   background-color: var(--color-error);
   color: white;
@@ -403,4 +423,31 @@ select {
   border-radius: 1rem;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+/* Info Button */
+.info-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--suggestion-bg);
+  border: 2px solid var(--suggestion-bg);
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-btn:hover {
+  border-color: #548b7a;
+  color: #548b7a;
+  transform: scale(1.05);
 }
