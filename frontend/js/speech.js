@@ -12,6 +12,8 @@ class SpeechRecorder {
         this.recordingTimeout = null;
         this.maxRecordingTime = 10000; // 10 seconds
         this.audioStream = null;
+        this.isSettingTranscription = false; // Flag to prevent keyboard during transcription
+        this.keyboardPreventionActive = false; // Global keyboard prevention flag
         
         // Bind methods to preserve this context
         this.startRecording = this.startRecording.bind(this);
@@ -27,6 +29,77 @@ class SpeechRecorder {
             console.log('⏹️ Received stopRecording event in SpeechRecorder');
             this.stopRecording();
         });
+        
+        // Global keyboard prevention system
+        this.setupKeyboardPrevention();
+    }
+    
+    setupKeyboardPrevention() {
+        // Prevent keyboard appearance during recording/transcription
+        const preventKeyboard = (event) => {
+            if (this.keyboardPreventionActive) {
+                console.log('🚫 Preventing keyboard appearance:', event.type, event.target.id);
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.target.blur) {
+                    event.target.blur();
+                }
+                return false;
+            }
+        };
+        
+        // Listen for all possible focus events
+        document.addEventListener('focusin', preventKeyboard, true);
+        document.addEventListener('focus', preventKeyboard, true);
+        document.addEventListener('click', (event) => {
+            if (this.keyboardPreventionActive && 
+                (event.target.id === 'user-input' || 
+                 event.target.classList.contains('recipe-input') ||
+                 event.target.tagName === 'INPUT' ||
+                 event.target.tagName === 'TEXTAREA')) {
+                console.log('🚫 Preventing click on input during recording');
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        }, true);
+        
+        // Also prevent touch events that might trigger keyboard
+        document.addEventListener('touchstart', (event) => {
+            if (this.keyboardPreventionActive && 
+                (event.target.id === 'user-input' || 
+                 event.target.classList.contains('recipe-input') ||
+                 event.target.tagName === 'INPUT' ||
+                 event.target.tagName === 'TEXTAREA')) {
+                console.log('🚫 Preventing touch on input during recording');
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        }, true);
+        
+        // Override the global toggleInputContainer function to prevent focus
+        if (window.toggleInputContainer) {
+            const originalToggleInputContainer = window.toggleInputContainer;
+            window.toggleInputContainer = (show) => {
+                if (this.keyboardPreventionActive && show) {
+                    console.log('🚫 Preventing toggleInputContainer focus during recording');
+                    // Call original but prevent focus
+                    const inputContainer = document.getElementById('input-container');
+                    if (inputContainer) {
+                        inputContainer.style.display = 'block';
+                        // Ensure input field doesn't get focus
+                        const inputField = document.getElementById('user-input');
+                        if (inputField) {
+                            inputField.blur();
+                        }
+                    }
+                } else {
+                    // Call original function
+                    originalToggleInputContainer(show);
+                }
+            };
+        }
     }
 
     async initMic() {
@@ -105,6 +178,10 @@ class SpeechRecorder {
         }
 
         console.log('Starting recording...');
+        
+        // Activate global keyboard prevention
+        this.keyboardPreventionActive = true;
+        this.isSettingTranscription = true;
         
         try {
             // Check if MediaRecorder is supported
@@ -249,6 +326,13 @@ class SpeechRecorder {
         }
 
         this.isRecording = false;
+        
+        // Keep keyboard prevention active for a bit longer to prevent post-recording keyboard
+        setTimeout(() => {
+            this.keyboardPreventionActive = false;
+            this.isSettingTranscription = false;
+            console.log('🔓 Keyboard prevention deactivated');
+        }, 3000); // 3 seconds to ensure no post-recording keyboard
     }
 
     // Force cleanup when MediaRecorder.stop() fails
@@ -318,61 +402,48 @@ class SpeechRecorder {
             }
 
             const data = await response.json();
-            console.log('📝 Received transcription response:', data);
-            console.log('📝 Response structure:', Object.keys(data));
-            console.log('📝 Text field value:', data.text);
-            console.log('📝 Text field type:', typeof data.text);
-            console.log('📝 Text field length:', data.text ? data.text.length : 0);
-            
-            if (data.text && data.text.trim()) {
-                console.log('✅ Setting input field value to:', data.text);
+            console.log('Received transcription:', data);
+            if (data.text) {
+                console.log('Setting input field value to:', data.text);
                 const inputField = document.getElementById('user-input');
                 if (!inputField) {
-                    console.error('❌ Input field with ID "user-input" not found');
-                    console.log('🔍 Available input fields:', document.querySelectorAll('input, textarea').length);
-                    // Try alternative selectors
-                    const alternativeInputs = document.querySelectorAll('input[type="text"], textarea, input[placeholder*="recipe"], input[placeholder*="ingredient"]');
-                    console.log('🔍 Alternative input fields found:', alternativeInputs.length);
-                    alternativeInputs.forEach((input, index) => {
-                        console.log(`  Input ${index}:`, {
-                            id: input.id,
-                            name: input.name,
-                            placeholder: input.placeholder,
-                            type: input.type
-                        });
-                    });
+                    console.error('Input field not found');
                     return;
                 }
                 
-                // Set the value
+                // Keep keyboard prevention active during transcription
+                this.keyboardPreventionActive = true;
+                this.isSettingTranscription = true;
+                
+                // Set the value without focusing to avoid keyboard appearance
                 inputField.value = data.text;
-                console.log('✅ Input field value set to:', inputField.value);
+                console.log('Input field value set to:', inputField.value);
                 
-                // Trigger events to ensure UI updates
+                console.log('Dispatching input event to trigger recipe generation');
                 inputField.dispatchEvent(new Event('input', { bubbles: true }));
-                inputField.dispatchEvent(new Event('change', { bubbles: true }));
                 
-                // Focus the input field to make it visible
-                inputField.focus();
-                
-                console.log('✅ Input events dispatched and field focused');
+                // Reset flags after a longer delay to prevent any post-transcription keyboard
+                setTimeout(() => {
+                    this.keyboardPreventionActive = false;
+                    this.isSettingTranscription = false;
+                    console.log('🔓 Keyboard prevention deactivated after transcription');
+                }, 3000); // 3 seconds
                 
                 // Also try to directly generate recipes
-                console.log('🔍 Checking if generateRecipes is available:', typeof window.generateRecipes);
+                console.log('Checking if generateRecipes is available:', typeof window.generateRecipes);
                 if (typeof window.generateRecipes === 'function') {
-                    console.log('🚀 Directly calling generateRecipes after transcription');
+                    console.log('Directly calling generateRecipes after transcription');
                     try {
                         await window.generateRecipes(true);
-                        console.log('✅ generateRecipes called successfully');
+                        console.log('generateRecipes called successfully');
                     } catch (error) {
-                        console.error('❌ Error calling generateRecipes:', error);
+                        console.error('Error calling generateRecipes:', error);
                     }
                 } else {
-                    console.log('⚠️ generateRecipes function not found on window');
+                    console.error('generateRecipes function not found on window');
                 }
             } else {
-                console.log('⚠️ No transcription text received or text is empty');
-                console.log('📝 Raw response data:', data);
+                console.log('No transcription text received');
             }
         } catch (error) {
             console.error('Error sending audio to server:', error);

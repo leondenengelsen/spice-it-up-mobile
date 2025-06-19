@@ -422,6 +422,21 @@ function toggleInputContainer(show) {
   const inputContainer = document.getElementById('input-container');
   if (inputContainer) {
     inputContainer.style.display = show ? 'block' : 'none';
+    
+    // If showing the input container, prevent focus to avoid keyboard
+    if (show) {
+      const inputField = document.getElementById('user-input');
+      if (inputField) {
+        // Remove any existing focus
+        inputField.blur();
+        // Add a small delay to ensure no focus events trigger
+        setTimeout(() => {
+          if (inputField === document.activeElement) {
+            inputField.blur();
+          }
+        }, 10);
+      }
+    }
   }
 }
 
@@ -827,7 +842,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const inputField = document.getElementById('user-input');
       if (inputField) {
         inputField.value = '';
-        inputField.focus();
       }
     };
   }

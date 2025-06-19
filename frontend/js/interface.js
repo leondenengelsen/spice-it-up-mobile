@@ -6,7 +6,7 @@ class InterfaceManager {
         this.talkBtn = document.getElementById('talk-btn');
         this.inputField = document.getElementById('user-input');
         this.pressTimer = null;
-        this.SHORT_PRESS_DURATION = 100; // milliseconds
+        this.SHORT_PRESS_DURATION = 50; // milliseconds
         this.isRecording = false;
         this.isPressed = false;
         this.wasLongPress = false;  // Track if this was a long press
