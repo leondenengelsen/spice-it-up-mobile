@@ -44,6 +44,12 @@
                     <button id="delete-account" class="auth-button delete-button">Delete Account</button>
                 </section>
 
+                <!-- Logout Section -->
+                <section class="settings-section">
+                    <h2>Session</h2>
+                    <button id="logout-btn" class="auth-button secondary">Logout</button>
+                </section>
+
                 <!-- Message Area -->
                 <div id="message" class="message"></div>
             </div>
@@ -143,6 +149,23 @@
                         window.location.href = '/signup.html';
                     } catch (error) {
                         console.error('Delete account error:', error);
+                        messageEl.textContent = `Error: ${error.message}`;
+                        messageEl.className = 'message error';
+                    }
+                };
+
+                // Handle logout
+                document.getElementById('logout-btn').onclick = async () => {
+                    try {
+                        await auth.signOut();
+                        // Clear any stored data
+                        localStorage.removeItem('firebaseToken');
+                        localStorage.removeItem('hasVisited');
+                        // Redirect to login page
+                        window.location.href = '/login.html';
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                        const messageEl = document.getElementById('message');
                         messageEl.textContent = `Error: ${error.message}`;
                         messageEl.className = 'message error';
                     }

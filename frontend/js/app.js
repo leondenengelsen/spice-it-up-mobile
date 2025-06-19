@@ -55,10 +55,11 @@ function formatAllergyNote(allergies) {
     return '';
   }
 
-  // Map allergy values to display labels
+    // Map allergy values to display labels
   const allergyLabels = {
-    milk: 'Milk',
-    eggs: 'Eggs', 
+    gluten: 'Gluten',
+    dairy: 'All Dairy',
+    eggs: 'Eggs',
     peanuts: 'Peanuts',
     tree_nuts: 'Tree Nuts',
     soy: 'Soy',
@@ -66,15 +67,15 @@ function formatAllergyNote(allergies) {
     fish: 'Fish',
     shellfish: 'Shellfish',
     sesame: 'Sesame',
-    gluten: 'Gluten',
+    cowmilk: 'Cow Milk',
     mustard: 'Mustard',
     celery: 'Celery',
     lupin: 'Lupin',
     sulfites: 'Sulfites',
     nightshades: 'Nightshades',
     corn: 'Corn',
-    meat: 'Meat',
-    dairy: 'All Dairy',
+    lactose: 'Lactose',
+    lowfodmap: 'Low FODMAP',
     vegan: 'Vegan',
     vegetarian: 'Vegetarian'
   };

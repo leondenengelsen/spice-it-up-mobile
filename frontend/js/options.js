@@ -2,9 +2,8 @@
 // console.log('🔄 [OPTIONS] Script starting to load - BEFORE IMPORTS');
 
 // Logic for the options page
-import { handleLogout } from './firebase/auth.js';
+import { getApiUrl } from './config.js';
 import { AllergyModal } from './allergyModal.js';
-import { getApiUrl, isNativeApp } from './config.js';
 
 // Commented out for production:
 // console.log('🔄 [OPTIONS] Script loaded - AFTER IMPORTS');
@@ -250,12 +249,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
-    // Handle logout
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.onclick = handleLogout;
-    }
-
     // Add event listener for adventure-slider input
     if (adventureSlider) {
       adventureSlider.addEventListener('input', (e) => updateAdventureText(e.target.value));
@@ -287,7 +280,8 @@ function updateAllergySummary(allergies) {
   }
 
   const allergyLabels = {
-    milk: 'Milk',
+    gluten: 'Gluten',
+    dairy: 'All Dairy',
     eggs: 'Eggs',
     peanuts: 'Peanuts',
     tree_nuts: 'Tree Nuts',
@@ -296,15 +290,15 @@ function updateAllergySummary(allergies) {
     fish: 'Fish',
     shellfish: 'Shellfish',
     sesame: 'Sesame',
-    gluten: 'Gluten',
+    cowmilk: 'Cow Milk',
     mustard: 'Mustard',
     celery: 'Celery',
     lupin: 'Lupin',
     sulfites: 'Sulfites',
     nightshades: 'Nightshades',
     corn: 'Corn',
-    meat: 'Meat',
-    dairy: 'All Dairy',
+    lactose: 'Lactose',
+    lowfodmap: 'Low FODMAP',
     vegan: 'Vegan',
     vegetarian: 'Vegetarian'
   };
