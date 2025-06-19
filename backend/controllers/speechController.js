@@ -11,7 +11,26 @@ console.log('📅 Initialization timestamp:', new Date().toISOString());
 console.log('🌐 Environment:', process.env.NODE_ENV || 'development');
 console.log('🚂 Railway Environment:', process.env.RAILWAY_ENVIRONMENT_NAME || 'not set');
 
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+// Check for Railway-style environment variable first (this is what you have set)
+if (process.env['gen-lang-client-0251517490-157aa58a7fda.json']) {
+  console.log('✅ Using credentials from Railway-style environment variable');
+  console.log('📏 JSON length:', process.env['gen-lang-client-0251517490-157aa58a7fda.json'].length);
+  
+  try {
+    const credentials = JSON.parse(process.env['gen-lang-client-0251517490-157aa58a7fda.json']);
+    console.log('✅ Successfully parsed Railway JSON credentials');
+    console.log('🏢 Project ID:', credentials.project_id);
+    console.log('📧 Client Email:', credentials.client_email);
+    
+    client = new speech.SpeechClient({
+      credentials: credentials
+    });
+    console.log('✅ Successfully created Speech client with Railway credentials');
+  } catch (error) {
+    console.error('❌ Error creating Speech client with Railway credentials:', error.message);
+    throw new Error('Invalid Railway Google Cloud credentials JSON');
+  }
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   console.log('✅ Using credentials from GOOGLE_APPLICATION_CREDENTIALS environment variable');
   console.log('📁 Credentials path:', credentialsPath);
@@ -45,25 +64,6 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   } catch (error) {
     console.error('❌ Error creating Speech client with JSON credentials:', error.message);
     throw new Error('Invalid Google Cloud credentials JSON');
-  }
-} else if (process.env['gen-lang-client-0251517490-157aa58a7fda.json']) {
-  // Use credentials from Railway-style environment variable
-  console.log('✅ Using credentials from Railway-style environment variable');
-  console.log('📏 JSON length:', process.env['gen-lang-client-0251517490-157aa58a7fda.json'].length);
-  
-  try {
-    const credentials = JSON.parse(process.env['gen-lang-client-0251517490-157aa58a7fda.json']);
-    console.log('✅ Successfully parsed Railway JSON credentials');
-    console.log('🏢 Project ID:', credentials.project_id);
-    console.log('📧 Client Email:', credentials.client_email);
-    
-    client = new speech.SpeechClient({
-      credentials: credentials
-    });
-    console.log('✅ Successfully created Speech client with Railway credentials');
-  } catch (error) {
-    console.error('❌ Error creating Speech client with Railway credentials:', error.message);
-    throw new Error('Invalid Railway Google Cloud credentials JSON');
   }
 } else {
   // Local development: use secrets directory
