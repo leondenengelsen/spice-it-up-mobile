@@ -27,6 +27,14 @@ export class AllergyModal {
             <div class="allergies-grid">
               ${this.getAllergyCheckboxes()}
             </div>
+            
+            <div class="dietary-section">
+              <label class="lowfodmap-checkbox">
+                <input type="checkbox" id="lowfodmap-checkbox" 
+                       ${this.selectedAllergies.has('lowfodmap') ? 'checked' : ''}>
+                <span class="lowfodmap-label">Low FODMAP</span>
+              </label>
+            </div>
           </div>
           <div class="modal-footer">
             <button class="modal-btn secondary" id="cancel-allergies">Cancel</button>
@@ -66,7 +74,6 @@ export class AllergyModal {
       { value: 'nightshades', label: 'Nightshades' },
       { value: 'corn', label: 'Corn' },
       { value: 'lactose', label: 'Lactose' },
-      { value: 'lowfodmap', label: 'Low FODMAP' },
       { value: 'vegan', label: 'Vegan' },
       { value: 'vegetarian', label: 'Vegetarian' }
     ];
@@ -106,6 +113,18 @@ export class AllergyModal {
         }
       });
     });
+
+    // Handle Low FODMAP checkbox separately
+    const lowfodmapCheckbox = this.modal.querySelector('#lowfodmap-checkbox');
+    if (lowfodmapCheckbox) {
+      lowfodmapCheckbox.addEventListener('change', () => {
+        if (lowfodmapCheckbox.checked) {
+          this.selectedAllergies.add('lowfodmap');
+        } else {
+          this.selectedAllergies.delete('lowfodmap');
+        }
+      });
+    }
   }
 
   async save() {

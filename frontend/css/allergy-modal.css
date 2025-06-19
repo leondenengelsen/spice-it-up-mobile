@@ -103,6 +103,75 @@
   background: var(--color-hover);
 }
 
+/* Dietary Section */
+.dietary-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #eee);
+}
+
+.lowfodmap-checkbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.6rem;
+  background: var(--color-bg, white);
+  border: 1px solid var(--color-muted, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lowfodmap-checkbox:hover {
+  border-color: var(--suggestion-bg);
+  background: var(--main-bg);
+}
+
+.lowfodmap-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.lowfodmap-label {
+  padding-left: 2rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.lowfodmap-checkbox input[type="checkbox"] + .lowfodmap-label::before {
+  content: '';
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid var(--color-muted);
+  border-radius: 4px;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.lowfodmap-checkbox input[type="checkbox"]:checked + .lowfodmap-label::before {
+  background-color: var(--suggestion-bg);
+  border-color: var(--suggestion-bg);
+}
+
+.lowfodmap-checkbox input[type="checkbox"]:checked + .lowfodmap-label::after {
+  content: '✓';
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.8rem;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }

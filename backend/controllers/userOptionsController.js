@@ -48,6 +48,108 @@ async function getUserAllergies(userId) {
 }
 
 /**
+ * Get user allergies filtered to exclude lowfodmap (for separate handling)
+ * @param {number} userId - The internal MySQL user ID
+ * @returns {string} - The formatted allergies string (excluding lowfodmap) or empty string if not found
+ */
+async function getUserAllergiesFiltered(userId) {
+  try {
+    const [rows] = await db.query(
+      'SELECT allergies FROM options WHERE user_id = ?',
+      [userId]
+    );
+    
+    const allergies = rows[0]?.allergies;
+    
+    // If no allergies found, return empty string
+    if (!allergies) {
+      return '';
+    }
+    
+    let allergyArray = [];
+    
+    // Parse allergies into array format
+    if (Array.isArray(allergies)) {
+      allergyArray = allergies;
+    } else if (typeof allergies === 'string') {
+      try {
+        const parsedAllergies = JSON.parse(allergies);
+        if (Array.isArray(parsedAllergies)) {
+          allergyArray = parsedAllergies;
+        } else {
+          // If it's not an array after parsing, treat as single item
+          allergyArray = [allergies];
+        }
+      } catch (parseError) {
+        // If parsing fails, treat as single item
+        allergyArray = [allergies];
+      }
+    } else {
+      // For any other type, convert to array
+      allergyArray = [String(allergies)];
+    }
+    
+    // Filter out lowfodmap
+    const filteredAllergies = allergyArray.filter(allergy => allergy !== 'lowfodmap');
+    
+    return filteredAllergies.length > 0 ? filteredAllergies.join(', ') : '';
+  } catch (err) {
+    console.error('Error fetching filtered allergies:', err);
+    return '';
+  }
+}
+
+/**
+ * Check if user has Low FODMAP dietary restriction
+ * @param {number} userId - The internal MySQL user ID
+ * @returns {boolean} - True if user has lowfodmap in their allergies array
+ */
+async function getUserLowFodmap(userId) {
+  try {
+    const [rows] = await db.query(
+      'SELECT allergies FROM options WHERE user_id = ?',
+      [userId]
+    );
+    
+    const allergies = rows[0]?.allergies;
+    
+    // If no allergies found, return false
+    if (!allergies) {
+      return false;
+    }
+    
+    let allergyArray = [];
+    
+    // Parse allergies into array format
+    if (Array.isArray(allergies)) {
+      allergyArray = allergies;
+    } else if (typeof allergies === 'string') {
+      try {
+        const parsedAllergies = JSON.parse(allergies);
+        if (Array.isArray(parsedAllergies)) {
+          allergyArray = parsedAllergies;
+        } else {
+          // If it's not an array after parsing, treat as single item
+          allergyArray = [allergies];
+        }
+      } catch (parseError) {
+        // If parsing fails, treat as single item
+        allergyArray = [allergies];
+      }
+    } else {
+      // For any other type, convert to array
+      allergyArray = [String(allergies)];
+    }
+    
+    // Check if lowfodmap is in the array
+    return allergyArray.includes('lowfodmap');
+  } catch (err) {
+    console.error('Error checking Low FODMAP status:', err);
+    return false;
+  }
+}
+
+/**
  * Get user adventurousness value from the options table (helper function)
  * @param {number} userId - The internal MySQL user ID
  * @returns {number} - The adventurousness value or 1 if not found
@@ -90,4 +192,4 @@ async function getUserAdventurousness(req, res) {
   }
 }
 
-module.exports = { getUserAllergies, getUserAdventurousness, getUserAdventurenessValue }; 
+module.exports = { getUserAllergies, getUserAllergiesFiltered, getUserLowFodmap, getUserAdventurousness, getUserAdventurenessValue }; 

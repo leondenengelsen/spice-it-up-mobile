@@ -5,7 +5,7 @@ const db = require('../db');
 const { storeRecipe, storeSuggestions } = require('../utils/storeRecipe');
 const { generateGeminiResponse } = require('../utils/geminiHelpers');
 const { getSystemMessage } = require('../utils/systemMessages');
-const { getUserAllergies, getUserAdventurenessValue } = require('./userOptionsController');
+const { getUserAllergies, getUserAllergiesFiltered, getUserLowFodmap, getUserAdventurenessValue } = require('./userOptionsController');
 
 // Memory cache for last responses per prompt
 const lastResponses = new Map();
@@ -33,18 +33,20 @@ exports.generateSuggestions = async (req, res) => {
     console.log("🟢 User ID:", userId);
 
     // Get user allergies and adventurousness
-    const allergies = await getUserAllergies(userId);
+    const allergies = await getUserAllergiesFiltered(userId); // Use filtered version (excludes lowfodmap)
+    const isLowFodmap = await getUserLowFodmap(userId); // Check Low FODMAP separately
     const adventurousness = await getUserAdventurenessValue(userId);
     
     console.log("🎯 USER PREFERENCES FETCHED:");
-    console.log("   - Allergies:", allergies || "None");
+    console.log("   - Allergies (filtered):", allergies || "None");
+    console.log("   - Low FODMAP diet:", isLowFodmap);
     console.log("   - Allergies type:", typeof allergies);
     console.log("   - Allergies length:", allergies ? allergies.length : 0);
     console.log("   - Adventurousness:", adventurousness);
     console.log("   - Is Detailed Recipe:", isDetailedRecipe);
     
-    // Get the complete system message with user preferences
-    const systemMessage = getSystemMessage(mode, portions, isDetailedRecipe, adventurousness, allergies, recipeIdea);
+    // Get the complete system message with user preferences (now includes Low FODMAP separately)
+    const systemMessage = getSystemMessage(mode, portions, isDetailedRecipe, adventurousness, allergies, isLowFodmap, recipeIdea);
 
     console.log("🔧 SYSTEM MESSAGE CONSTRUCTED:");
     console.log("   - Base message type:", isDetailedRecipe ? "DETAILED RECIPE" : "RECIPE IDEAS");

@@ -79,16 +79,28 @@ function formatAllergyNote(allergies) {
     nightshades: 'Nightshades',
     corn: 'Corn',
     lactose: 'Lactose',
-    lowfodmap: 'Low FODMAP',
     vegan: 'Vegan',
     vegetarian: 'Vegetarian'
   };
 
-  const displayAllergies = allergies.map(allergy => 
+  // Filter out lowfodmap from regular allergies display
+  const regularAllergies = allergies.filter(allergy => allergy !== 'lowfodmap');
+  const hasLowFodmap = allergies.includes('lowfodmap');
+
+  const displayAllergies = regularAllergies.map(allergy => 
     allergyLabels[allergy] || allergy
   ).join(', ');
 
-  return `${displayAllergies} | allergy-friendly`;
+  // Create allergy note parts
+  const parts = [];
+  if (displayAllergies) {
+    parts.push(`${displayAllergies} | allergy-friendly`);
+  }
+  if (hasLowFodmap) {
+    parts.push('Low FODMAP friendly');
+  }
+
+  return parts.join(' • ');
 }
 
 // Export only the functions needed by other modules

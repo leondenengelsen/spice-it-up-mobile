@@ -298,14 +298,33 @@ function updateAllergySummary(allergies) {
     nightshades: 'Nightshades',
     corn: 'Corn',
     lactose: 'Lactose',
-    lowfodmap: 'Low FODMAP',
     vegan: 'Vegan',
     vegetarian: 'Vegetarian'
   };
 
-  const tags = allergies.map(allergy => 
-    `<span class="allergy-tag">${allergyLabels[allergy] || allergy}</span>`
-  ).join('');
+  // Separate allergies from dietary restrictions
+  const regularAllergies = allergies.filter(allergy => allergy !== 'lowfodmap');
+  const hasLowFodmap = allergies.includes('lowfodmap');
 
-  summaryElement.innerHTML = `<div class="allergy-tags">${tags}</div>`;
+  let html = '';
+
+  // Show regular allergies
+  if (regularAllergies.length > 0) {
+    const allergyTags = regularAllergies.map(allergy => 
+      `<span class="allergy-tag">${allergyLabels[allergy] || allergy}</span>`
+    ).join('');
+    html += `<div class="allergy-tags">${allergyTags}</div>`;
+  }
+
+  // Show Low FODMAP separately
+  if (hasLowFodmap) {
+    html += `<div class="dietary-tags"><span class="dietary-tag">Low FODMAP (IBS)</span></div>`;
+  }
+
+  // If nothing to show
+  if (!regularAllergies.length && !hasLowFodmap) {
+    html = '<p class="no-allergies">No allergies or dietary restrictions selected</p>';
+  }
+
+  summaryElement.innerHTML = html;
 }
