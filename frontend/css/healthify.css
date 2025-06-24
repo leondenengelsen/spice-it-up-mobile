@@ -91,7 +91,7 @@ body{
   margin-top: clamp(2rem, 10vh, 6rem);
   line-height: 3.8rem;
   color: var(--color-text);
-  opacity: 1;
+  opacity: 0.9;
 }
 
 .headline {
