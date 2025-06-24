@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/header-shared.css" />
   <link rel="stylesheet" href="css/healthify.css" />
   <link rel="stylesheet" href="css/inputValidator.css" />
+  <link rel="stylesheet" href="css/swipe-navigation.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -42,8 +43,7 @@
 
   <div class="chili-wrap" id="chili-wrap">
     <div class="input-container" id="input-container">
-      <label class="input-label" for="user-input">type dish or ingredients</label>
-      <input id="user-input" class="ingredient-input" type="text" placeholder="e.g. pasta, burgers, fries, chocolate cake" autocomplete="off" />
+      <input id="user-input" class="ingredient-input" type="text" placeholder="type ingredients or dish" autocomplete="off" />
     </div>
     <div class="chili-buttons-row">
       <button class="restart-btn" id="restart-btn" aria-label="Back to start" style="display: none;">
@@ -53,7 +53,7 @@
         <span style="font-size: 4rem;">🥦</span>
       </button>
     </div>
-    <p class="speak-hint">tap to get healthy recipe ideas</p>
+    <p class="speak-hint">tap and hold to speak</p>
   </div>
 
   <script type="module" src="js/firebase/authStateManager.js"></script>
@@ -65,5 +65,6 @@
   <script type="module" src="js/speech.js"></script>
   <script type="module" src="js/app.js"></script>
   <script type="module" src="js/healthify.js"></script>
+  <script type="module" src="js/swipe-navigation.js"></script>
 </body>
 </html>

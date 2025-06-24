@@ -57,7 +57,7 @@ html, body {
 
 body, input, button, label, h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-main) !important;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 /* ========================
@@ -76,10 +76,11 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
 .app-title-text {
   flex: 1;
   text-align: center;
-  font-size: 2em;
+  font-size: 2.4rem;
+  font-weight: 300;
   letter-spacing: 0.05em;
   color: var(--color-text);
-  margin: 0;
+  margin: 0 0 1rem 0;
 }
 
 /* ========================
@@ -88,7 +89,7 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
 .subtitle-text {
   font-size: 1.1rem;
   text-align: center;
-  margin-top: -1rem;
+  margin-top: 0;
   color: var(--color-text);
   opacity: 0.6;
 }
@@ -117,6 +118,7 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
    Shared Components
 ======================== */
 .input-container {
+  position: relative;
   width: 100%;
   margin-bottom: 0.5em;
   border-radius: 1.5em;

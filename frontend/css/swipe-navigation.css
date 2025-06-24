@@ -1,0 +1,25 @@
+/* Swipe Navigation Styles for Separate Pages */
+
+/* Page transition effects */
+body {
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+/* Prevent text selection during swipes */
+body.swiping {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  /* Mobile-specific adjustments if needed */
+}
+
+/* Ensure swipe doesn't interfere with scrolling */
+.swipe-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+} 
