@@ -16,8 +16,8 @@ body{
 
 /* Healthify page specific button styles */
 .chili-btn {
-  width: 10rem;
-  height: 10rem;
+  width: 7rem;
+  height: 7rem;
   background: linear-gradient(to bottom, #619B8A, #519983);
   border-radius: 50%;
   border: 2px solid #4f7f6e;
@@ -85,13 +85,13 @@ body{
 }
 
 .headline-text {
-  font-size: 2.3rem;
+  font-size: 1.9rem;
   font-weight: 300;
   text-align: center;
   margin-top: clamp(2rem, 10vh, 6rem);
   line-height: 3.8rem;
   color: var(--color-text);
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 .headline {
@@ -116,6 +116,7 @@ body{
 /* Make AI-powered subtitle transparent like main page */
 .subtitle-text {
   color: #44444481;
+  margin-top: -1rem;
 }
 
 /* Ensure (Healthify) label is fully visible */
@@ -161,15 +162,15 @@ body{
 }
 
 .sprout-icon {
-  font-size: 2.5rem;
+  font-size: 1.8rem !important;
   background: none;
   border: none;
 }
 
 .restart-btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  background: rgba(255, 220, 160, 0.9);
+  width: 60px;
+  height: 60px;
+  background: none;
   border-radius: 50%;
   border: none;
   outline: none;
@@ -182,12 +183,19 @@ body{
   top: 50%;
   transform: translateY(-50%);
   opacity: 0.85;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: transform 0.2s, background-color 0.2s;
+  font-size: 36px;
+  font-weight: 300;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', sans-serif;
+  font-variation-settings: 'emoji' 1;
+  text-rendering: optimizeQuality;
+  line-height: 1;
 }
 
 .restart-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateY(-50%) scale(1.1);
   opacity: 1;
-  transform: translateY(-50%) scale(1.05);
 }
 
 .restart-btn:active {
@@ -404,7 +412,7 @@ body{
   }
 
   .headline-text {
-    font-size: 2.3rem;
+    font-size: 2.0rem;
     line-height: 3.6rem;
   }
 
@@ -423,4 +431,8 @@ body{
     line-height: 2.8rem;
     margin-top: 1.5rem;
   }
+}
+
+.app-title-text {
+  margin: 1.5rem 0 1rem 0;
 }
