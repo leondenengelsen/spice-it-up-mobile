@@ -7,6 +7,6 @@ router.get('/random', getRandomRecipes);
 router.get('/:id', getRecipe);
 
 // New route for random recipe suggestions (ideas)
-router.get('/recipe-suggestions/random', getRandomRecipeSuggestions);
+router.get('/recipe-suggestions/random', getRandomRecipes);
 
 module.exports = router;
