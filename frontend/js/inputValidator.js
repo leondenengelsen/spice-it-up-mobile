@@ -47,6 +47,7 @@ class InputValidator {
     const counter = document.createElement('div');
     counter.className = 'input-character-counter';
     counter.textContent = `0 / ${this.maxLength}`;
+    counter.style.display = 'none'; // Hide by default
     
     // Insert counter after the input field
     const inputContainer = inputField.closest('.input-container') || inputField.parentNode;
@@ -56,6 +57,13 @@ class InputValidator {
     const updateCounter = () => {
       const currentLength = inputField.value.length;
       counter.textContent = `${currentLength} / ${this.maxLength}`;
+      
+      // Show counter only when there's text
+      if (currentLength > 0) {
+        counter.style.display = 'block';
+      } else {
+        counter.style.display = 'none';
+      }
       
       // Add warning styling when approaching limit
       if (currentLength > this.maxLength * 0.9) {
@@ -74,6 +82,9 @@ class InputValidator {
     
     inputField.addEventListener('input', updateCounter);
     inputField.addEventListener('paste', () => setTimeout(updateCounter, 10));
+    
+    // Also check on focus to show counter if there's already text
+    inputField.addEventListener('focus', updateCounter);
   }
 
   preventLongInputSubmission(inputField) {

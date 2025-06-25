@@ -57,7 +57,7 @@ html, body {
 
 body, input, button, label, h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-main) !important;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 /* ========================
@@ -69,17 +69,18 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 1rem;
+  margin: 0 1rem 1rem 1rem;
   background: transparent;
 }
 
 .app-title-text {
   flex: 1;
   text-align: center;
-  font-size: 2em;
+  font-size: 2.2rem;
+  font-weight: 250;
   letter-spacing: 0.05em;
   color: var(--color-text);
-  margin: 0;
+  margin: 1.5rem 0 1rem 0;
 }
 
 /* ========================
@@ -88,13 +89,14 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
 .subtitle-text {
   font-size: 1.1rem;
   text-align: center;
-  margin-top: -1rem;
+  margin-top: 0;
   color: var(--color-text);
   opacity: 0.6;
 }
 
 .headline-text {
-  font-size: 2rem;
+  font-size: 1.8rem;
+  font-weight: 200;
   text-align: center;
   margin-top: clamp(2rem, 10vh, 6rem);
   line-height: 3.2rem;
@@ -117,10 +119,11 @@ body, input, button, label, h1, h2, h3, h4, h5, h6 {
    Shared Components
 ======================== */
 .input-container {
+  position: relative;
   width: 100%;
   margin-bottom: 0.5em;
   border-radius: 1.5em;
-  padding: 0.5em;
+  padding: 0.5em 0.3em;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
