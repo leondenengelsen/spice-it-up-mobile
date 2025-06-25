@@ -9,7 +9,7 @@
   /* display: flex; */
   flex-direction: column;
   align-items: center;
-  padding-top: 0.5rem;
+  padding-top: 0;
   background: var(--main-bg, #fff7e6); /* fallback color if --main-bg isn't set */
   min-height: calc(100vh - 80px); /* Account for header height */
 }
@@ -478,4 +478,50 @@ select {
   border-color: #548b7a;
   color: #548b7a;
   transform: scale(1.05);
+}
+
+.inspiration-btn-container {
+  position: static;
+  left: unset;
+  bottom: unset;
+  z-index: unset;
+  margin: 3.5em 0 0 0;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inspiration-btn {
+  width: 100%;
+  min-height: 52px;
+  margin: 0.5em 0;
+  padding: 1em;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 0.8em;
+  background: #8AE7BD;
+  color: #222;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s, background-color 0.2s;
+}
+
+.inspiration-btn:hover {
+  background-color: #7ad1a9;
+  transform: translateY(-1px);
+}
+
+.inspiration-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 600px) {
+  .inspiration-btn-container {
+    left: unset;
+    bottom: unset;
+    margin-top: 2.5em;
+  }
 }

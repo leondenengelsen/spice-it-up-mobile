@@ -15,25 +15,25 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body>
-  <header class="app-header">
-    <a href="index.html" aria-label="Go back to main" class="header-link">
-      <button class="header-btn" aria-label="Home" tabindex="-1">
-        <img src="Images/pepper-gpt-Photoroom.png" alt="Home" class="header-img" />
-      </button>
-    </a>
-    <div class="app-title">
-      <h1 class="app-title-text">Spice It Up!</h1>
-    </div>
-    <div class="header-actions">
-      <a href="favorites.html" aria-label="Go to favorites" class="header-link">
-        <button class="header-btn" aria-label="Favorites" tabindex="-1">
-          <span class="header-emoji">❤️</span>
+  <main id="options-page">
+    <header class="app-header">
+      <a href="index.html" aria-label="Go back to main" class="header-link">
+        <button class="header-btn" aria-label="Home" tabindex="-1">
+          <img src="Images/pepper-gpt-Photoroom.png" alt="Home" class="header-img" />
         </button>
       </a>
-    </div>
-  </header>
+      <div class="app-title">
+        <h1 class="app-title-text">Spice It Up!</h1>
+      </div>
+      <div class="header-actions">
+        <a href="favorites.html" aria-label="Go to favorites" class="header-link">
+          <button class="header-btn" aria-label="Favorites" tabindex="-1">
+            <span class="header-emoji">❤️</span>
+          </button>
+        </a>
+      </div>
+    </header>
 
-  <main id="options-page">
     <section class="options-container">
       <h5 class="subtitle-text">Settings</h5>
       <form class="options-form" id="options-form">
@@ -66,6 +66,10 @@
         <button type="submit" class="options-btn">Save Changes</button>
       </form>
 
+      <!-- Inspiration Button -->
+      <div class="inspiration-btn-container">
+        <button onclick="window.location.href='inspiration.html'" class="inspiration-btn" aria-label="Get inspired">Out of inspiration?</button>
+      </div>
       <!-- Account Settings Section -->
       <div class="logout-section">
         <a href="account-settings.html" class="auth-button">Account Settings</a>

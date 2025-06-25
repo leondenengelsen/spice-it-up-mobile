@@ -6,6 +6,8 @@ import { auth } from './firebase/init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from './config.js';
 import { processRecipeDisplay } from './emojiUtils.js';
+import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, setLocalFavorites, getCurrentUserId } from './utils/localFavorites.js';
+import { syncFavoritesWithDB, mergeFavorites } from './utils/favoritesSync.js';
 
 // Global variables for authenticated user state
 let currentUserId = null;
@@ -214,18 +216,19 @@ function initializeFavoritesPage() {
 }
 
 function loadFavorites() {
-  console.log('[favorites.js] loadFavorites called');
-  const loadingState = document.getElementById('loading-state');
-  const emptyState = document.getElementById('empty-state');
-  const favoritesGrid = document.getElementById('favorites-grid');
-  
-  // Show loading state
-  if (loadingState) loadingState.style.display = 'block';
-  if (emptyState) emptyState.style.display = 'none';
-  if (favoritesGrid) favoritesGrid.style.display = 'none';
-  
-  // Fetch favorites from database
-  fetchFavoritesFromDatabase();
+  // Show local favorites immediately
+  const userId = getCurrentUserId();
+  const localFavorites = getLocalFavorites(userId);
+  renderFavorites(localFavorites);
+
+  // Try to sync with DB if online
+  if (navigator.onLine) {
+    fetchFavoritesFromDatabase();
+    syncFavoritesWithDB();
+  } else {
+    // Optionally show offline indicator
+    showFeedback('Offline: showing local favorites');
+  }
 }
 
 async function fetchFavoritesFromDatabase() {
@@ -235,7 +238,6 @@ async function fetchFavoritesFromDatabase() {
   const favoritesGrid = document.getElementById('favorites-grid');
   
   try {
-    // Get Firebase token for authentication
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
       console.log('[favorites.js] No firebaseToken found in localStorage');
@@ -246,28 +248,15 @@ async function fetchFavoritesFromDatabase() {
     const apiUrl = `${getApiUrl()}/api/favorites`;
     console.log('[favorites.js] API URL for favorites:', apiUrl);
     const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     
     if (response.ok) {
       const result = await response.json();
-      const favorites = result.favorites || [];
-      console.log('[favorites.js] Fetched favorites:', favorites);
-      
-      if (favorites.length === 0) {
-        // Show empty state
-        if (loadingState) loadingState.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'block';
-        if (favoritesGrid) favoritesGrid.style.display = 'none';
-      } else {
-        // Show favorites
-        if (loadingState) loadingState.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'none';
-        if (favoritesGrid) favoritesGrid.style.display = 'block';
-        renderFavorites(favorites);
-      }
+      const dbFavorites = result.favorites || [];
+      // Merge DB and local, update local
+      const merged = mergeFavorites(dbFavorites);
+      renderFavorites(merged);
     } else {
       console.error('[favorites.js] Failed to fetch favorites:', response.statusText);
       showError('Failed to load favorites. Please try again.');
@@ -292,38 +281,40 @@ function renderFavorites(favorites) {
     console.error('[favorites.js] Could not find #favorites-grid in DOM!');
     return;
   }
-  favoritesGrid.innerHTML = favorites.map((favorite, index) => {
-    // Process recipe title for display using frontend utilities
-    const displayData = processRecipeDisplay(favorite);
-    const { emoji, cleanTitle } = displayData;
-    const { recipe_id } = favorite;
-    
-    // Create a short description from the title, similar to recipe ideas
-    // Remove the emoji and create a descriptive sentence
-    const shortDescription = cleanTitle ? 
-      `A delicious ${cleanTitle.toLowerCase()} recipe with creative twists and fresh flavors.` :
-      'A creative recipe variation with unique ingredients and techniques.';
-    
-    return `
-      <div class="recipe-idea-box" onclick="showFullRecipe(${recipe_id})">
-        <div class="title-row">
-          <span class="recipe-emoji">${emoji}</span>
-          <span class="recipe-title"><b>${cleanTitle}</b></span>
-          <button class="favorite-btn favorited" 
-            onclick="event.stopPropagation(); removeFavorite(${recipe_id})" 
-            aria-label="Remove from favorites">
-            <span class="heart-icon">❤️</span>
-          </button>
+  console.log('[favorites.js] Rendering favorites:', favorites);
+  // Defensive: skip any favorite missing required fields
+  favoritesGrid.innerHTML = favorites
+    .filter(fav => fav && fav.title && fav.recipe_id && fav.description)
+    .map((favorite, index) => {
+      const displayData = processRecipeDisplay(favorite);
+      const { emoji, cleanTitle } = displayData;
+      const { recipe_id } = favorite;
+      const shortDescription = cleanTitle ? 
+        `A delicious ${cleanTitle.toLowerCase()} recipe with creative twists and fresh flavors.` :
+        'A creative recipe variation with unique ingredients and techniques.';
+      return `
+        <div class="recipe-idea-box" onclick="showFullRecipe(${recipe_id})">
+          <div class="title-row">
+            <span class="recipe-emoji">${emoji}</span>
+            <span class="recipe-title"><b>${cleanTitle}</b></span>
+            <button class="favorite-btn favorited" 
+              onclick="event.stopPropagation(); removeFavorite(${recipe_id})" 
+              aria-label="Remove from favorites">
+              <span class="heart-icon">❤️</span>
+            </button>
+          </div>
+          <div class="recipe-desc">${shortDescription}</div>
+          <div class="recipe-meta">
+            <small>Saved: ${formatDate(favorite.favorited_at)}</small>
+          </div>
         </div>
-        <div class="recipe-desc">${shortDescription}</div>
-        <div class="recipe-meta">
-          <small>Saved: ${formatDate(favorite.favorited_at)}</small>
-        </div>
-      </div>
-    `;
-  }).join('');
-  
-  // Store favorites globally for access in event handlers
+      `;
+    }).join('');
+  favoritesGrid.style.display = favorites.length > 0 ? 'block' : 'none';
+  const loadingState = document.getElementById('loading-state');
+  const emptyState = document.getElementById('empty-state');
+  if (loadingState) loadingState.style.display = 'none';
+  if (emptyState) emptyState.style.display = favorites.length === 0 ? 'block' : 'none';
   window.currentFavorites = favorites;
 }
 
@@ -337,59 +328,19 @@ function formatDate(dateString) {
 }
 
 async function removeFavorite(recipeId) {
-  try {
-    // Get Firebase token for authentication
-    const token = localStorage.getItem('firebaseToken');
-    if (!token) {
-      showFeedback('Please log in to remove favorites');
-      return;
-    }
-
-    // Show immediate visual feedback
-    const favoriteBtn = document.querySelector(`[onclick="removeFavorite(${recipeId})"]`);
-    if (favoriteBtn) {
-      const heartIcon = favoriteBtn.querySelector('.heart-icon');
-      if (heartIcon) {
-        heartIcon.textContent = '♡';
-        favoriteBtn.classList.remove('favorited');
-      }
-    }
-    
-    // Show feedback message
-    showFeedback('Removing from favorites...');
-    
-    const apiUrl = `${getApiUrl()}/api/favorites/recipe/${recipeId}`;
-    const response = await fetch(apiUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to remove favorite');
-    }
-    
-    // Show success feedback
-    showFeedback('Removed from favorites!');
-    
-    // Refresh the favorites list immediately
-    loadFavorites();
-    
-  } catch (error) {
-    console.error('Error removing favorite:', error);
-    showFeedback('Error removing favorite');
-    
-    // Revert the heart icon on error
-    const favoriteBtn = document.querySelector(`[onclick="removeFavorite(${recipeId})"]`);
-    if (favoriteBtn) {
-      const heartIcon = favoriteBtn.querySelector('.heart-icon');
-      if (heartIcon) {
-        heartIcon.textContent = '❤️';
-        favoriteBtn.classList.add('favorited');
-      }
-    }
+  const userId = getCurrentUserId();
+  removeLocalFavorite(recipeId, userId);
+  renderFavorites(getLocalFavorites(userId));
+  if (navigator.onLine) {
+    try {
+      const token = localStorage.getItem('firebaseToken');
+      if (!token) return;
+      const apiUrl = `${getApiUrl()}/api/favorites/recipe/${recipeId}`;
+      await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
+    } catch {}
   }
 }
 
@@ -606,51 +557,40 @@ function backToFavorites() {
 }
 
 // Helper function to add a favorite (can be called from other pages)
-async function addToFavorites(recipe) {
-  if (!recipe.recipe_id) {
-    console.log('⚠️ No recipe_id provided, cannot save to database');
-    return false;
-  }
-
-  try {
-    // Get Firebase token for authentication
-    const token = localStorage.getItem('firebaseToken');
-    if (!token) {
-      console.error('❌ No authentication token found');
-      return false;
+async function addToFavorites(idea) {
+  // Use the exact structure as DB favorites
+  const userId = getCurrentUserId();
+  const favorite = {
+    recipe_id: idea.recipe_id,
+    title: idea.title, // Use the exact title from the DB/recipe object
+    description: idea.description, // Use the exact description from the DB/recipe object
+    favorited_at: new Date().toISOString(),
+    sync: navigator.onLine
+  };
+  console.log('[favorites.js] Adding to local favorites:', favorite);
+  const added = addLocalFavorite(favorite, userId);
+  if (!added) return false;
+  renderFavorites(getLocalFavorites(userId));
+  if (navigator.onLine) {
+    try {
+      const token = localStorage.getItem('firebaseToken');
+      if (!token) return false;
+      const apiUrl = `${getApiUrl()}/api/favorites`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ recipe_id: idea.recipe_id })
+      });
+      if (response.ok) {
+        favorite.sync = true;
+        setLocalFavorites(getLocalFavorites(userId), userId);
+        return true;
+      }
+    } catch (err) {
+      console.error('[favorites.js] Error syncing favorite to DB:', err);
     }
-
-    // Save to database
-    console.log('🔄 Saving favorite to database:', {
-      recipe_id: recipe.recipe_id
-    });
-    
-    const apiUrl = `${getApiUrl()}/api/favorites`;
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        recipe_id: recipe.recipe_id
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ Failed to save to database:', errorData);
-      return false;
-    }
-
-    const result = await response.json();
-    console.log('✅ Favorite saved to database successfully:', result);
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Error saving favorite:', error);
-    return false;
   }
+  return true; // Added locally
 }
 
 // Add event listener for escape key to close modal
