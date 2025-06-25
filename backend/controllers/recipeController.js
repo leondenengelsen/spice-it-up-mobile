@@ -113,28 +113,20 @@ async function getRandomRecipes(req, res) {
 
 /**
  * Get a list of random recipe suggestions (ideas)
+ * Updated: Now returns real recipes from the recipes table for inspiration page
  */
 async function getRandomRecipeSuggestions(req, res) {
   try {
     const count = parseInt(req.query.count) || 3;
-    // Fetch 10 random rows to get a good pool
-    const [rows] = await db.query(
-      `SELECT suggestion_1, suggestion_2, suggestion_3 FROM recipe_suggestions ORDER BY RAND() LIMIT 10`
+    // Get random recipes from the recipes table
+    const [recipes] = await db.query(
+      'SELECT id as recipe_id, title, description FROM recipes ORDER BY RAND() LIMIT ?',
+      [count]
     );
-    // Flatten all suggestions into a single array
-    let allIdeas = [];
-    rows.forEach(row => {
-      if (row.suggestion_1) allIdeas.push(row.suggestion_1);
-      if (row.suggestion_2) allIdeas.push(row.suggestion_2);
-      if (row.suggestion_3) allIdeas.push(row.suggestion_3);
-    });
-    // Shuffle and pick count ideas
-    allIdeas = allIdeas.sort(() => Math.random() - 0.5);
-    const selected = allIdeas.slice(0, count).map(idea => ({ title: idea, description: '' }));
-    res.json({ success: true, recipes: selected });
+    res.json({ success: true, recipes });
   } catch (error) {
-    console.error('Error fetching random recipe suggestions:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch random recipe suggestions' });
+    console.error('Error fetching random recipes:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch random recipes' });
   }
 }
 
