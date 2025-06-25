@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inspiration – Spice It Up</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/header-shared.css" />
+  <link rel="stylesheet" href="css/inspiration.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="app-header">
+    <button class="menu-icon" id="hamburger" aria-label="Menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="app-title">
+      <h1 class="app-title-text">Inspiration page</h1>
+    </div>
+    <div class="header-actions">
+      <a href="options.html" aria-label="Back to options" class="header-link">
+        <button class="header-btn" aria-label="Pepper" tabindex="-1">
+          <img src="Images/pepper-gpt-Photoroom.png" alt="Pepper" class="header-img" />
+        </button>
+      </a>
+    </div>
+  </header>
+  <main id="inspiration-page">
+    <h2 class="subtitle-text">Get Inspired</h2>
+    <section class="ideas-container" id="ideas-container">
+      <!-- Recipe ideas will be rendered here -->
+    </section>
+    <button id="shuffle-btn" class="shuffle-btn" aria-label="Shuffle ideas">Shuffle</button>
+  </main>
+  <script type="module" src="js/inspiration.js"></script>
+</body>
+</html> 

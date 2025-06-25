@@ -382,8 +382,11 @@
 }
 
 .menu-icon .bar {
-  width: 28px;
-  height: 3px;
+  width: 28px !important;
+  height: 2px !important;
+  background: #222 !important;
+  border-radius: 2px !important;
+  margin: 4px 0 !important;
 }
 
 @media (max-width: 480px) {
@@ -396,4 +399,12 @@
     width: 24px;
     height: 2px;
   }
+}
+
+.subtitle-text {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 1.5em;
+  color: var(--color-text);
+  opacity: 0.6;
 }

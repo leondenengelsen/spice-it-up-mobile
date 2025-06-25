@@ -1,7 +1,7 @@
 // Main app logic for Spice It Up
 
 // Import favorites functions
-import { addToFavorites, getCurrentUser } from './favorites.js';
+import { addToFavorites, getCurrentUser, removeFavorite } from './favorites.js';
 import { getApiUrl } from './config.js';
 import { extractEmoji, cleanTitle, processRecipeDisplay, EMOJI_CONFIG } from './emojiUtils.js';
 import { getCurrentPageMode } from './pageContext.js';
@@ -675,69 +675,43 @@ async function handleRecipeClick(idx, idea) {
       if (favoriteBtn) {
         favoriteBtn.addEventListener('click', async () => {
           try {
-            // Disable button during request
             favoriteBtn.disabled = true;
             favoriteBtn.style.opacity = '0.6';
-
             const isFavorited = favoriteBtn.classList.contains('favorited');
-            
             if (isFavorited) {
-              // Remove from favorites
-              const response = await fetch(`${getApiUrl()}/api/favorites/recipe/${savedRecipeId}`, {
-                method: 'DELETE',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                }
-              });
-
-              if (!response.ok) {
-                throw new Error('Failed to remove from favorites');
-              }
-
-              // Update UI to show unfavorited state
+              // Remove from favorites (local + DB)
+              await removeFavorite(savedRecipeId);
               const heartIcon = favoriteBtn.querySelector('.heart-icon');
               heartIcon.textContent = '♡';
               favoriteBtn.classList.remove('favorited');
               favoriteBtn.setAttribute('aria-label', 'Add to favorites');
-
               // Show feedback
               const feedbackDiv = document.createElement('div');
               feedbackDiv.className = 'favorite-feedback';
               feedbackDiv.textContent = 'Removed from favorites!';
               document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
-
-              // Remove feedback after a few seconds
               setTimeout(() => {
                 feedbackDiv.style.opacity = '0';
                 setTimeout(() => feedbackDiv.remove(), 500);
               }, 2000);
             } else {
-              // Add to favorites
+              // Add to favorites (local + DB)
               const recipeData = {
                 emoji: idea.emoji,
                 title: idea.title,
                 description: idea.desc,
-                fullRecipe: data.message,
                 recipe_id: savedRecipeId
               };
-              
               const success = await addToFavorites(recipeData);
-              
               if (success) {
-                // Change the heart icon to show it's been favorited
                 const heartIcon = favoriteBtn.querySelector('.heart-icon');
                 heartIcon.textContent = '❤️';
                 favoriteBtn.classList.add('favorited');
                 favoriteBtn.setAttribute('aria-label', 'Remove from favorites');
-                
-                // Show feedback
                 const feedbackDiv = document.createElement('div');
                 feedbackDiv.className = 'favorite-feedback';
                 feedbackDiv.textContent = 'Added to favorites!';
                 document.querySelector('.full-recipe-modal').appendChild(feedbackDiv);
-                
-                // Remove feedback after a few seconds
                 setTimeout(() => {
                   feedbackDiv.style.opacity = '0';
                   setTimeout(() => feedbackDiv.remove(), 500);
@@ -746,18 +720,11 @@ async function handleRecipeClick(idx, idea) {
                 throw new Error('Recipe already exists in favorites or failed to add');
               }
             }
-
-            // Re-enable button after operation completes
             favoriteBtn.disabled = false;
             favoriteBtn.style.opacity = '1';
-            
           } catch (error) {
-            console.error('❌ Error managing favorites:', error);
-            
-            // Re-enable button on error
             favoriteBtn.disabled = false;
             favoriteBtn.style.opacity = '1';
-            
             alert('Failed to update favorites. Please try again.');
           }
         });

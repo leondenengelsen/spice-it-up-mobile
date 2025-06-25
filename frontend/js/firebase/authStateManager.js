@@ -1,6 +1,7 @@
 import { auth } from './init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getApiUrl } from '../config.js';
+import { syncFavoritesWithDB } from '../utils/favoritesSync.js';
 
 class AuthStateManager {
   constructor() {
@@ -143,6 +144,9 @@ class AuthStateManager {
       
       // Update UI for logged-in state
       this.updateAuthUI(true, await this.checkIfAdmin(token));
+      
+      // After successful login and backend verification:
+      await syncFavoritesWithDB();
       
     } else {
       // User is signed out
