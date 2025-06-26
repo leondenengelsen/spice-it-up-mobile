@@ -50,7 +50,7 @@ function renderRecipeTitles(recipes) {
 async function fetchRandomRecipes() {
   showLoading();
   try {
-    const res = await fetch('/api/recipes/random?count=5');
+    const res = await fetch(`${getApiUrl()}/api/recipes/random?count=5`);
     if (!res.ok) throw new Error('Failed to fetch recipes');
     const data = await res.json();
     if (!data.success || !data.recipes) throw new Error('No recipes found');
@@ -116,7 +116,7 @@ function renderRecipeContent(recipe) {
 
 async function showFullRecipe(recipeId) {
   try {
-    const res = await fetch(`/api/recipes/${recipeId}`);
+    const res = await fetch(`${getApiUrl()}/api/recipes/${recipeId}`);
     if (!res.ok) throw new Error('Failed to fetch recipe');
     const data = await res.json();
     if (!data.success || !data.recipe) throw new Error('Invalid recipe data received');
