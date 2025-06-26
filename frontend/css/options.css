@@ -525,3 +525,7 @@ select {
     margin-top: 2.5em;
   }
 }
+
+.app-header {
+  margin-bottom: 0.5rem !important;
+}

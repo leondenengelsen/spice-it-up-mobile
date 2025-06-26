@@ -101,13 +101,14 @@ async function getRecipe(req, res) {
 async function getRandomRecipes(req, res) {
   try {
     const count = parseInt(req.query.count) || 3;
+    // Fetch from the full recipes table, id, title, and a short description
     const [recipes] = await db.query(
-      `SELECT id, title, description FROM recipe_ideas ORDER BY RAND() LIMIT ?`, [count]
+      `SELECT id, title, LEFT(description, 120) AS description FROM recipes ORDER BY RAND() LIMIT ?`, [count]
     );
     res.json({ success: true, recipes });
   } catch (error) {
-    console.error('Error fetching random recipe ideas:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch random recipe ideas' });
+    console.error('Error fetching random recipes:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch random recipes' });
   }
 }
 

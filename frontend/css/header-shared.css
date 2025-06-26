@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 0 1rem 0; /* Only bottom padding, no top/left/right */
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   background: transparent;
   min-height: 48px; /* Ensures consistent header height */
   box-sizing: border-box; /* Include padding in width calculation */

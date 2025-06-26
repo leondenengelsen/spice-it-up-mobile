@@ -436,7 +436,7 @@ function renderRecipeContent(recipe) {
     
     // Add ingredients section if available
     if (recipe.ingredients) {
-      content += '<p><strong>Ingredients:</strong></p><br>\n<ul>';
+      content += '<p><strong>Ingredients:</strong></p>\n<ul>';
       try {
         // Parse ingredients if it's a string, otherwise use as is
         const ingredients = typeof recipe.ingredients === 'string' 
@@ -514,27 +514,19 @@ function renderRecipeContent(recipe) {
     
     // Add instructions section if available
     if (recipe.instructions) {
-      content += '<p><strong>Instructions:</strong></p><br>\n';
-      content += recipe.instructions.replace(/\n/g, '<br>') + '\n\n';
+      content += '<p><strong>Instructions:</strong></p>\n';
+      content += recipe.instructions.replace(/\n/g, '<br>') + '<br>\n\n';
     }
     
     // Add steps section if available and different from instructions
     if (recipe.steps && (!recipe.instructions || recipe.steps.length > 0)) {
       try {
-        // Parse steps if it's a string, otherwise use as is
         const steps = typeof recipe.steps === 'string'
           ? JSON.parse(recipe.steps)
           : recipe.steps;
-
         if (!recipe.instructions && steps.length > 0) {
-          content += '<p><strong>Instructions:</strong></p><br>\n<ol>';
-          steps.forEach(step => {
-            // Skip empty steps or formatting
-            if (step && !step.startsWith('*') && !step.startsWith('Tips')) {
-              content += `<li>${step}</li>`;
-            }
-          });
-          content += '</ol>\n\n';
+          content += '<p><strong>Instructions:</strong></p>\n';
+          content += steps.map(step => step && !step.startsWith('*') && !step.startsWith('Tips') ? `${step}<br>` : '').join('') + '\n\n';
         }
       } catch (error) {
         console.error('Error parsing steps:', error);

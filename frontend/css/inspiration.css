@@ -26,7 +26,7 @@
 
 .ideas-container {
   max-width: 480px;
-  margin: 2em auto;
+  margin: 0 auto;
   padding: 0 1em;
   display: flex;
   flex-direction: column;
@@ -98,4 +98,78 @@
   background: #222 !important;
   border-radius: 2px !important;
   margin: 4px 0 !important;
+}
+
+/* Full recipe modal styles (copied from favorites.css for consistency) */
+.full-recipe-modal {
+  background: transparent;
+  border-radius: var(--radius-lg);
+  margin-top: 1.5em;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  max-width: var(--max-width-modal);
+  width: 100%;
+  position: relative;
+  animation: fadeIn 0.3s;
+  z-index: 10;
+  box-shadow: none;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-header {
+  margin-bottom: 1em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.recipe-header .recipe-title {
+  font-size: 1.5em;
+  font-weight: 500;
+  margin: 0 0 0.5em 0;
+  color: var(--color-text);
+}
+
+.full-recipe-content {
+  background: var(--recipe-bg);
+  color: var(--recipe-text);
+  padding: 1.5em;
+  border-radius: var(--radius-lg);
+  font-size: 1.08em;
+  line-height: 1.6;
+  margin-bottom: 1em;
+}
+
+.full-recipe-content ul {
+  margin-top: 0;
+}
+
+.full-recipe-content p {
+  margin-bottom: 0;
+}
+
+.back-button {
+  background: #FFBC42;
+  color: #333;
+  border: none;
+  border-radius: 1.5em;
+  padding: 0.7em 1.5em;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 1em auto;
+  display: block;
+  transition: transform 0.12s, background-color 0.2s;
+}
+
+.back-button:hover {
+  background: #FFD077;
+}
+
+.back-button:active {
+  transform: scale(0.97);
 } 
